@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://www.eventosvortice.com/sitemap.xml
+
+# Block common non-content paths
+Disallow: /api/
+Disallow: /*.json$
