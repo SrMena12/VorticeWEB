@@ -24,7 +24,7 @@ const active = (h: string) => (h === '/admin' ? path === '/admin' : path.startsW
     <link rel="icon" href="/img/simbolo-vortice.png" type="image/png" />
     <script is:inline>document.documentElement.classList.add('js')</script>
   </head>
-  <body class="bg-[#f1f8fd] min-h-screen">
+  <body class="bg-[#f1f8fd] min-h-screen overflow-x-clip">
     {!bare && (
       <header class="bg-[#0d2f4a] text-white">
         <div class="mx-auto max-w-6xl px-4 py-3 flex flex-wrap items-center gap-x-6 gap-y-2">
@@ -32,7 +32,7 @@ const active = (h: string) => (h === '/admin' ? path === '/admin' : path.startsW
             <img src="/img/logo-vortice-blanco.png" alt="Vórtice Eventos" width="251" height="130" class="h-9 w-auto" />
             <span class="ml-3 text-xs font-bold uppercase tracking-widest text-[#8fdcff]">Panel</span>
           </a>
-          <nav class="flex gap-1" aria-label="Panel">
+          <nav class="flex flex-wrap gap-1 w-full lg:w-auto order-last lg:order-none" aria-label="Panel">
             {nav.map((n) => (
               <a href={n.href} aria-current={active(n.href) ? 'page' : undefined}
                  class={`px-4 py-2 rounded-full font-bold text-sm ${active(n.href) ? 'bg-white text-[#0d2f4a]' : 'text-white/85 hover:bg-white/10'}`}>{n.label}</a>

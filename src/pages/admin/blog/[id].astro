@@ -171,6 +171,10 @@ try {
 
       function wrap(before, after, placeholder) {
         var s = ta.selectionStart, e = ta.selectionEnd, sel = ta.value.slice(s, e) || placeholder;
+        if (/\n{2,}/.test(sel)) {
+          var out = sel.split(/(\n{2,})/).map(function (p) { return !p || /^\n+$/.test(p) ? p : before + p + after; }).join('');
+          ta.setRangeText(out, s, e, 'select'); ta.focus(); render(); return;
+        }
         ta.setRangeText(before + sel + after, s, e, 'select'); ta.focus(); ta.selectionStart = s + before.length; ta.selectionEnd = s + before.length + sel.length; render();
       }
       document.querySelectorAll('[data-fmt]').forEach(function (b) {
