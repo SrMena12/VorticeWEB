@@ -1,0 +1,126 @@
+---
+export const prerender = false;
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { sql } from '../../lib/db';
+import { SERVICES } from '../../data/site';
+
+const days = [7, 30, 90].includes(Number(Astro.url.searchParams.get('d'))) ? Number(Astro.url.searchParams.get('d')) : 30;
+let totals = { views: 0, visitors: 0, today: 0 };
+let series: { day: string; views: number; visitors: number }[] = [];
+let pages: any[] = [], sources: any[] = [], devices: any[] = [], countries: any[] = [];
+let conv = { regs: 0, seats: 0, subs: 0 };
+let topEvents: any[] = [];
+let error = false;
+
+try {
+  const [t] = await sql`
+    SELECT count(*)::int AS views, count(DISTINCT visitor || (at AT TIME ZONE 'Europe/Madrid')::date::text)::int AS visitors,
+           count(*) FILTER (WHERE (at AT TIME ZONE 'Europe/Madrid')::date = (now() AT TIME ZONE 'Europe/Madrid')::date)::int AS today
+      FROM pageviews WHERE at > now() - make_interval(days => ${days})`;
+  totals = t as any;
+  series = (await sql`
+    SELECT to_char(d, 'YYYY-MM-DD') AS day, coalesce(v.views, 0)::int AS views, coalesce(v.visitors, 0)::int AS visitors
+      FROM generate_series(((now() AT TIME ZONE 'Europe/Madrid')::date - ${days - 1}::int), (now() AT TIME ZONE 'Europe/Madrid')::date, '1 day') AS d
+      LEFT JOIN (SELECT (at AT TIME ZONE 'Europe/Madrid')::date AS day, count(*) AS views, count(DISTINCT visitor) AS visitors
+                   FROM pageviews GROUP BY 1) v ON v.day = d::date
+     ORDER BY d`) as any;
+  pages = await sql`SELECT path, count(*)::int AS views FROM pageviews WHERE at > now() - make_interval(days => ${days}) GROUP BY path ORDER BY views DESC LIMIT 10`;
+  sources = await sql`SELECT CASE WHEN ref = '' THEN 'Directo' ELSE ref END AS ref, count(*)::int AS views FROM pageviews WHERE at > now() - make_interval(days => ${days}) GROUP BY 1 ORDER BY views DESC LIMIT 8`;
+  devices = await sql`SELECT device, count(*)::int AS views FROM pageviews WHERE at > now() - make_interval(days => ${days}) GROUP BY 1 ORDER BY views DESC`;
+  countries = await sql`SELECT country, count(*)::int AS views FROM pageviews WHERE at > now() - make_interval(days => ${days}) AND country <> '' GROUP BY 1 ORDER BY views DESC LIMIT 5`;
+  const [c] = await sql`
+    SELECT (SELECT count(*) FROM registrations WHERE created_at > now() - make_interval(days => ${days}))::int AS regs,
+           (SELECT coalesce(sum(attendees), 0) FROM registrations WHERE created_at > now() - make_interval(days => ${days}))::int AS seats,
+           (SELECT count(*) FROM subscribers WHERE created_at > now() - make_interval(days => ${days}) AND status = 'active')::int AS subs`;
+  conv = c as any;
+  topEvents = await sql`
+    SELECT e.title, e.id, count(r.id)::int AS regs, coalesce(sum(r.attendees), 0)::int AS seats
+      FROM registrations r JOIN events e ON e.id = r.event_id
+     WHERE r.created_at > now() - make_interval(days => ${days}) GROUP BY e.id ORDER BY regs DESC LIMIT 5`;
+} catch (e) { console.error('estadisticas', e); error = true; }
+
+const names: Record<string, string> = {
+  '/': 'Inicio', '/eventos': 'Eventos', '/blog': 'Blog', '/contacto': 'Contacto', '/nosotros': 'Nosotros', '/adventrix': 'Adventrix', '/privacidad': 'Privacidad',
+  ...Object.fromEntries(SERVICES.map((s) => [`/servicios/${s.slug}`, s.title])),
+};
+const pageName = (p: string) => names[p] ?? (p.startsWith('/blog/') ? 'Blog · ' + p.slice(6) : p.startsWith('/eventos/') ? 'Evento · ' + p.slice(9) : p);
+const devLabel: Record<string, string> = { mobile: 'Móvil', desktop: 'Ordenador', tablet: 'Tablet' };
+const countryName = (c: string) => { try { return new Intl.DisplayNames(['es'], { type: 'region' }).of(c) ?? c; } catch { return c; } };
+const max = Math.max(1, ...series.map((s) => s.views));
+const totalDev = devices.reduce((s, d) => s + d.views, 0) || 1;
+const shortDay = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+const maxPage = Math.max(1, ...pages.map((p) => p.views));
+---
+<AdminLayout title="Estadísticas">
+  <div class="flex flex-wrap items-center gap-3">
+    <h1 class="text-4xl grow">Estadísticas</h1>
+    <div class="flex gap-2">
+      {[7, 30, 90].map((n) => <a href={`/admin/estadisticas?d=${n}`} class="chip" aria-pressed={days === n ? 'true' : 'false'}>{n} días</a>)}
+    </div>
+  </div>
+  <p class="mt-2 text-mute">Visitas a la web, sin cookies ni datos personales (no hace falta aviso de cookies). No cuentan robots ni tus visitas al panel.</p>
+  {error && <p class="mt-4 p-3 rounded-2xl bg-[#ffe3e8] text-[#a3182f] font-bold" role="alert">No se pudo leer la base de datos.</p>}
+
+  <div class="mt-6 grid gap-4 grid-cols-2 lg:grid-cols-4">
+    {[
+      { n: totals.views, l: 'Páginas vistas' }, { n: totals.visitors, l: 'Visitas únicas' },
+      { n: conv.regs, l: `Inscripciones (${conv.seats} plazas)` }, { n: conv.subs, l: 'Nuevos suscriptores' },
+    ].map((s) => <div class="glass rounded-3xl p-5"><div class="font-display text-4xl md:text-5xl text-[color:var(--pt)]">{s.n}</div><div class="mt-1 text-sm font-bold text-mute">{s.l}</div></div>)}
+  </div>
+  <p class="mt-2 text-sm text-mute">Hoy: <strong>{totals.today}</strong> páginas vistas.</p>
+
+  <section class="mt-8 glass rounded-[2rem] p-5 md:p-7">
+    <h2 class="text-2xl">Visitas por día</h2>
+    {totals.views === 0 ? <p class="mt-3 text-mute">Aún no hay visitas registradas. Empezarán a aparecer en cuanto alguien navegue por la web.</p> : (
+      <div class="mt-5">
+        <div class="flex items-end gap-[3px] h-48" role="img" aria-label={`Gráfico de páginas vistas por día durante los últimos ${days} días`}>
+          {series.map((s) => (
+            <div class="flex-1 min-w-0 flex flex-col justify-end h-full group relative">
+              <div class="rounded-t bg-[#0a9ddb] hover:bg-[#ffc933] transition-colors" style={`height:${Math.max(2, (s.views / max) * 100)}%`} title={`${shortDay(s.day)}: ${s.views} vistas · ${s.visitors} visitas únicas`}></div>
+            </div>
+          ))}
+        </div>
+        <div class="mt-2 flex justify-between text-xs text-mute"><span>{shortDay(series[0].day)}</span><span>{shortDay(series[series.length - 1].day)}</span></div>
+      </div>
+    )}
+  </section>
+
+  <div class="mt-6 grid gap-6 lg:grid-cols-2">
+    <section class="glass rounded-[2rem] p-5 md:p-7">
+      <h2 class="text-2xl">Páginas más vistas</h2>
+      {pages.length === 0 ? <p class="mt-3 text-mute">Sin datos todavía.</p> : (
+        <ul class="mt-4 grid gap-3">
+          {pages.map((p) => (
+            <li><div class="flex justify-between gap-3 text-sm"><span class="font-bold truncate">{pageName(p.path)}</span><span>{p.views}</span></div>
+              <div class="mt-1 h-2 rounded-full bg-[#e8f4fb]"><div class="h-2 rounded-full bg-[#0a9ddb]" style={`width:${(p.views / maxPage) * 100}%`}></div></div></li>
+          ))}
+        </ul>
+      )}
+    </section>
+    <section class="glass rounded-[2rem] p-5 md:p-7">
+      <h2 class="text-2xl">De dónde llegan</h2>
+      {sources.length === 0 ? <p class="mt-3 text-mute">Sin datos todavía.</p> : (
+        <ul class="mt-4 grid gap-2 text-sm">{sources.map((s) => <li class="flex justify-between gap-3 border-b border-[var(--accl)] pb-2"><span class="font-bold">{s.ref}</span><span>{s.views}</span></li>)}</ul>
+      )}
+      <h3 class="mt-6 text-lg font-display">Dispositivo</h3>
+      <ul class="mt-2 grid gap-1 text-sm">{devices.map((d) => <li class="flex justify-between"><span>{devLabel[d.device] ?? d.device}</span><span>{Math.round((d.views / totalDev) * 100)} %</span></li>)}</ul>
+      {countries.length > 0 && <>
+        <h3 class="mt-6 text-lg font-display">País</h3>
+        <ul class="mt-2 grid gap-1 text-sm">{countries.map((c) => <li class="flex justify-between"><span>{countryName(c.country)}</span><span>{c.views}</span></li>)}</ul>
+      </>}
+    </section>
+  </div>
+
+  <section class="mt-6 glass rounded-[2rem] p-5 md:p-7">
+    <h2 class="text-2xl">Eventos con más inscripciones</h2>
+    {topEvents.length === 0 ? <p class="mt-3 text-mute">Aún no hay inscripciones en este periodo.</p> : (
+      <ul class="mt-3 grid gap-2 text-sm">{topEvents.map((e) => <li class="flex justify-between gap-3 border-b border-[var(--accl)] pb-2"><a class="font-bold hover:underline" href={`/admin/eventos/${e.id}`}>{e.title}</a><span>{e.regs} inscripciones · {e.seats} plazas</span></li>)}</ul>
+    )}
+  </section>
+
+  <section class="mt-6 rounded-[2rem] p-5 md:p-7 bg-[#0d2f4a] text-white">
+    <h2 class="text-2xl">¿Qué buscan en Google para llegar a ti?</h2>
+    <p class="mt-2 text-white/80">Eso lo sabe Google, no la web. Es gratis con <strong>Google Search Console</strong>: te dice las palabras exactas, tu posición y los clics. Añade la propiedad <code>eventosvortice.com</code>, verifícala (la web ya está preparada) y envía el mapa <code>/sitemap.xml</code>.</p>
+    <a class="btn btn-ghost mt-4" href="https://search.google.com/search-console" target="_blank" rel="noopener">Abrir Search Console ↗</a>
+  </section>
+</AdminLayout>

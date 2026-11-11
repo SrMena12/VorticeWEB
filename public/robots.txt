@@ -2,5 +2,7 @@ User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /api/
+Disallow: /baja
+Disallow: /confirmar
 
-Sitemap: https://www.eventosvortice.com/sitemap-index.xml
+Sitemap: https://www.eventosvortice.com/sitemap.xml

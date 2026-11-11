@@ -57,6 +57,40 @@ const DDL = [
      key text NOT NULL,
      at timestamptz NOT NULL DEFAULT now())`,
   `CREATE INDEX IF NOT EXISTS rate_limits_key_idx ON rate_limits (key, at)`,
+
+  // --- v2: correos, suscriptores y estadísticas ---
+  `ALTER TABLE registrations ADD COLUMN IF NOT EXISTS marketing_opt_in boolean NOT NULL DEFAULT false`,
+  `ALTER TABLE events ADD COLUMN IF NOT EXISTS reminder_sent_at timestamptz`,
+  `CREATE TABLE IF NOT EXISTS subscribers (
+     id serial PRIMARY KEY,
+     email text UNIQUE NOT NULL,
+     name text NOT NULL DEFAULT '',
+     status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'unsubscribed')),
+     source text NOT NULL DEFAULT 'web',
+     consent_at timestamptz,
+     unsubscribed_at timestamptz,
+     created_at timestamptz NOT NULL DEFAULT now())`,
+  `CREATE TABLE IF NOT EXISTS campaigns (
+     id serial PRIMARY KEY,
+     subject text NOT NULL,
+     body text NOT NULL,
+     audience text NOT NULL,
+     audience_label text NOT NULL DEFAULT '',
+     kind text NOT NULL DEFAULT 'manual',
+     recipients integer NOT NULL DEFAULT 0,
+     failed integer NOT NULL DEFAULT 0,
+     error text,
+     created_at timestamptz NOT NULL DEFAULT now())`,
+  `CREATE TABLE IF NOT EXISTS pageviews (
+     id bigserial PRIMARY KEY,
+     at timestamptz NOT NULL DEFAULT now(),
+     path text NOT NULL,
+     ref text NOT NULL DEFAULT '',
+     device text NOT NULL DEFAULT 'desktop',
+     country text NOT NULL DEFAULT '',
+     visitor text NOT NULL)`,
+  `CREATE INDEX IF NOT EXISTS pageviews_at_idx ON pageviews (at)`,
+  `CREATE INDEX IF NOT EXISTS pageviews_path_idx ON pageviews (path, at)`,
 ];
 
 for (const q of DDL) await sql.query(q);

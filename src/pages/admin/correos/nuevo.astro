@@ -1,0 +1,156 @@
+---
+export const prerender = false;
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { sql } from '../../../lib/db';
+import { clean, isEmail, fmtDateShort } from '../../../lib/util';
+import { TEMPLATES, templateById } from '../../../lib/templates';
+import { AUDIENCE_LABEL, resolveRecipients, eventVars, type Audience } from '../../../lib/audiences';
+import { sendMany, siteBase } from '../../../lib/mail';
+import { getEventAdmin, listEventsAdmin } from '../../../lib/queries';
+
+const q = Astro.url.searchParams;
+const tpl = templateById(q.get('plantilla') || 'libre') ?? TEMPLATES[TEMPLATES.length - 1];
+let v = {
+  subject: tpl.subject, body: tpl.body, audience: (q.get('audiencia') || (tpl.audience === 'cualquiera' ? 'newsletter' : tpl.audience)) as Audience,
+  event_id: q.get('evento') || '', cta_label: tpl.ctaLabel ?? '', cta_url: '', test_email: '',
+};
+let errors: string[] = [];
+let result: { kind: 'test' | 'send'; sent: number; failed: number; error?: string; total: number } | null = null;
+let events: any[] = [];
+let dbError = false;
+
+try {
+  events = await listEventsAdmin();
+
+  if (Astro.request.method === 'POST') {
+    const form = await Astro.request.formData();
+    const action = String(form.get('action') || '');
+    v = {
+      subject: clean(form.get('subject'), 200), body: clean(form.get('body'), 10000),
+      audience: (clean(form.get('audience'), 20) as Audience), event_id: clean(form.get('event_id'), 10),
+      cta_label: clean(form.get('cta_label'), 60), cta_url: clean(form.get('cta_url'), 500), test_email: clean(form.get('test_email'), 200),
+    };
+    const eventId = v.event_id ? Number(v.event_id) : null;
+    const ev = eventId ? await getEventAdmin(eventId) : null;
+    if (!['inscritos', 'newsletter', 'asistentes'].includes(v.audience)) errors.push('Elige a quién enviarlo.');
+    if (v.audience === 'inscritos' && !ev) errors.push('Para escribir a los inscritos, elige el evento.');
+    if (v.subject.length < 3) errors.push('Escribe el asunto.');
+    if (v.body.length < 10) errors.push('El mensaje está vacío.');
+    if (v.cta_url && !/^https?:\/\//.test(v.cta_url)) errors.push('El enlace del botón debe empezar por https://');
+    if (action === 'test' && !isEmail(v.test_email.toLowerCase())) errors.push('Escribe un email válido para la prueba.');
+
+    if (!errors.length) {
+      const marketing = v.audience !== 'inscritos';
+      const vars = eventVars(ev);
+      const ctaUrl = v.cta_url || (ev ? vars.enlace : undefined);
+      const ctaLabel = ctaUrl ? (v.cta_label || 'Ver el evento') : undefined;
+      const reason = marketing
+        ? 'Recibes este correo porque te suscribiste a los avisos de Vórtice Eventos.'
+        : `Recibes este correo porque te inscribiste en ${ev!.title}.`;
+      const opts = { subject: v.subject, body: v.body, ctaLabel, ctaUrl, marketing, reason };
+
+      if (action === 'test') {
+        const r = await sendMany([{ email: v.test_email.toLowerCase(), name: 'Prueba', vars }], { ...opts, subject: `[PRUEBA] ${v.subject}` });
+        result = { kind: 'test', total: 1, ...r };
+      } else if (action === 'send') {
+        const recipients = (await resolveRecipients(v.audience, eventId)).map((r) => ({ ...r, vars }));
+        if (!recipients.length) errors.push('No hay destinatarios con esa selección.');
+        else {
+          const r = await sendMany(recipients, opts);
+          await sql`
+            INSERT INTO campaigns (subject, body, audience, audience_label, kind, recipients, failed, error)
+            VALUES (${v.subject}, ${v.body}, ${v.audience}, ${AUDIENCE_LABEL[v.audience] + (ev ? ` · ${ev.title}` : '')}, 'manual', ${recipients.length}, ${r.failed}, ${r.error ?? null})`;
+          result = { kind: 'send', total: recipients.length, ...r };
+        }
+      }
+    }
+  }
+} catch (e) {
+  console.error('correos nuevo', e);
+  dbError = true;
+}
+
+const keyOk = Boolean(process.env.RESEND_API_KEY);
+const vars = ['nombre', 'evento', 'fecha', 'hora', 'lugar', 'plazas_libres', 'enlace'];
+---
+<AdminLayout title="Nuevo correo">
+  <nav class="text-sm font-bold text-mute"><a class="hover:text-fg" href="/admin/correos">← Correos</a></nav>
+  <h1 class="mt-2 text-4xl">Nuevo correo</h1>
+
+  {!keyOk && <p class="mt-4 p-3 rounded-2xl bg-[#ffe3e8] text-[#a3182f] font-bold" role="alert">El servicio de correo no está conectado todavía: puedes redactar, pero no se enviará.</p>}
+  {dbError && <p class="mt-4 p-3 rounded-2xl bg-[#ffe3e8] text-[#a3182f] font-bold" role="alert">Error con la base de datos.</p>}
+  {errors.length > 0 && <ul class="mt-4 p-4 rounded-2xl bg-[#ffe3e8] text-[#a3182f] font-bold list-disc pl-8" role="alert">{errors.map((e) => <li>{e}</li>)}</ul>}
+  {result && (
+    <div class={`mt-4 p-4 rounded-2xl ${result.failed === 0 ? 'bg-[#d9f7e3] text-[#0f6b34]' : 'bg-[#ffe3e8] text-[#a3182f]'}`} role="status">
+      {result.kind === 'test'
+        ? (result.sent ? <strong>Prueba enviada a {v.test_email}. Revisa tu bandeja (y el spam).</strong> : <strong>No se pudo enviar la prueba: {result.error}</strong>)
+        : <strong>{result.sent} correo{result.sent === 1 ? '' : 's'} enviado{result.sent === 1 ? '' : 's'} de {result.total}.{result.failed > 0 ? ` ${result.failed} fallido${result.failed === 1 ? '' : 's'}: ${result.error ?? ''}` : ' ¡Listo!'}</strong>}
+    </div>
+  )}
+
+  <div class="mt-5 flex flex-wrap gap-2">
+    <span class="text-sm font-bold text-mute self-center">Plantilla:</span>
+    {TEMPLATES.map((t) => <a href={`/admin/correos/nuevo?plantilla=${t.id}${v.event_id ? `&evento=${v.event_id}` : ''}`} class={`chip ${t.id === tpl.id ? '' : ''}`} aria-pressed={t.id === tpl.id ? 'true' : 'false'}>{t.name}</a>)}
+  </div>
+
+  <form method="post" id="mailform" class="mt-5 glass rounded-[2rem] p-6 md:p-8 grid gap-5">
+    <div class="grid gap-5 sm:grid-cols-2">
+      <label class="grid gap-1.5 text-sm font-bold">¿A quién lo enviamos?
+        <select class="field font-normal" name="audience" id="aud">
+          {(Object.keys(AUDIENCE_LABEL) as Audience[]).map((a) => <option value={a} selected={v.audience === a}>{AUDIENCE_LABEL[a]}</option>)}
+        </select>
+      </label>
+      <label class="grid gap-1.5 text-sm font-bold">Evento (para rellenar fecha, lugar y enlace)
+        <select class="field font-normal" name="event_id" id="evt">
+          <option value="">— Ninguno —</option>
+          {events.map((e) => <option value={e.id} selected={String(e.id) === String(v.event_id)}>{e.title} · {fmtDateShort(e.starts_at)}</option>)}
+        </select>
+      </label>
+    </div>
+    <p class="text-sm text-mute -mt-2">Destinatarios: <strong id="count">…</strong>. Si eliges un evento, no se escribe a quien ya está inscrito (salvo que sea «Inscritos a un evento»).</p>
+
+    <label class="grid gap-1.5 text-sm font-bold">Asunto
+      <input class="field font-normal" name="subject" value={v.subject} required maxlength="200" />
+    </label>
+    <label class="grid gap-1.5 text-sm font-bold">Mensaje
+      <textarea class="field font-normal" name="body" rows="12" required maxlength="10000">{v.body}</textarea>
+      <span class="text-xs font-normal text-mute">Línea en blanco = nuevo párrafo. Usa **así** para negrita. Puedes insertar: {vars.map((x) => <code class="font-bold mr-1">{'{{' + x + '}}'}</code>)}</span>
+    </label>
+    <div class="grid gap-5 sm:grid-cols-2">
+      <label class="grid gap-1.5 text-sm font-bold">Texto del botón (opcional)
+        <input class="field font-normal" name="cta_label" value={v.cta_label} maxlength="60" placeholder="Ver programa y apuntarme" />
+      </label>
+      <label class="grid gap-1.5 text-sm font-bold">Enlace del botón (si hay evento, se usa el del evento)
+        <input class="field font-normal" name="cta_url" value={v.cta_url} maxlength="500" placeholder="https://…" />
+      </label>
+    </div>
+
+    <div class="rounded-2xl bg-[#e8f4fb] p-4 grid gap-3">
+      <strong class="text-sm">Antes de enviar a todos, prueba cómo se ve</strong>
+      <div class="flex flex-wrap gap-3">
+        <input class="field font-normal grow min-w-[14rem]" type="email" name="test_email" value={v.test_email} placeholder="tu@email.com" aria-label="Email para la prueba" />
+        <button class="btn btn-dark !py-2.5" name="action" value="test" type="submit">Enviar prueba</button>
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-3 items-center">
+      <button class="btn btn-primary" name="action" value="send" type="submit" id="sendbtn">Enviar ahora</button>
+      <a class="btn btn-white border-2 border-[var(--accl)]" href="/admin/correos">Cancelar</a>
+    </div>
+  </form>
+
+  <script is:inline>
+    (function () {
+      var aud = document.getElementById('aud'), evt = document.getElementById('evt'), count = document.getElementById('count'), n = 0;
+      function refresh() {
+        count.textContent = '…';
+        fetch('/api/admin/destinatarios?audiencia=' + encodeURIComponent(aud.value) + '&evento=' + encodeURIComponent(evt.value))
+          .then(function (r) { return r.json(); }).then(function (j) { n = j.total || 0; count.textContent = n + ' persona' + (n === 1 ? '' : 's'); })
+          .catch(function () { count.textContent = 'no se pudo calcular'; });
+      }
+      aud.addEventListener('change', refresh); evt.addEventListener('change', refresh); refresh();
+      document.getElementById('mailform').addEventListener('submit', function (e) {
+        if (e.submitter && e.submitter.value === 'send' && !confirm('¿Enviar este correo a ' + n + ' persona' + (n === 1 ? '' : 's') + '? No se puede deshacer.')) e.preventDefault();
+      });
+    })();
+  </script>
+</AdminLayout>

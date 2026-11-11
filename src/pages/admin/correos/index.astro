@@ -1,0 +1,77 @@
+---
+export const prerender = false;
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { sql } from '../../../lib/db';
+import { subscriberStats, AUDIENCE_LABEL } from '../../../lib/audiences';
+import { TEMPLATES } from '../../../lib/templates';
+import { fmtDateShort, fmtTime } from '../../../lib/util';
+
+let campaigns: any[] = [];
+let stats = { active: 0, pending: 0, unsubscribed: 0 };
+let error = false;
+try {
+  campaigns = await sql`SELECT id, subject, audience, audience_label, kind, recipients, failed, error, created_at FROM campaigns ORDER BY created_at DESC LIMIT 30`;
+  stats = await subscriberStats();
+} catch (e) { console.error('correos', e); error = true; }
+
+const keyOk = Boolean(process.env.RESEND_API_KEY);
+const from = process.env.EMAIL_FROM || '';
+const sandbox = !from || from.includes('resend.dev');
+const flash = Astro.url.searchParams.get('msg') === 'enviado' ? 'Correo enviado.' : '';
+---
+<AdminLayout title="Correos">
+  <div class="flex flex-wrap items-center gap-3">
+    <h1 class="text-4xl grow">Correos y avisos</h1>
+    <a class="btn btn-primary" href="/admin/correos/nuevo">+ Nuevo correo</a>
+  </div>
+  {flash && <p class="mt-4 p-3 rounded-2xl bg-[#d9f7e3] text-[#0f6b34] font-bold" role="status">{flash}</p>}
+  {error && <p class="mt-4 p-3 rounded-2xl bg-[#ffe3e8] text-[#a3182f] font-bold" role="alert">No se pudo leer la base de datos.</p>}
+
+  {!keyOk && (
+    <div class="mt-4 p-4 rounded-2xl bg-[#ffe3e8] text-[#a3182f]" role="alert">
+      <strong>El envío de correos todavía no está activo.</strong> Falta conectar el servicio de correo (Resend). Hasta entonces puedes preparar los mensajes, pero no se enviarán.
+    </div>
+  )}
+  {keyOk && sandbox && (
+    <div class="mt-4 p-4 rounded-2xl bg-[#fff1cc] text-[#6b4700]" role="status">
+      <strong>Modo de pruebas:</strong> mientras no se verifique el dominio en Resend, los correos solo llegan al email de la cuenta de Resend. No se entregarán a los participantes.
+    </div>
+  )}
+
+  <div class="mt-6 grid gap-4 sm:grid-cols-3">
+    <a href="/admin/suscriptores" class="glass rounded-3xl p-5"><div class="font-display text-5xl text-[color:var(--pt)]">{stats.active}</div><div class="mt-1 text-sm font-bold text-mute">Suscriptores activos</div></a>
+    <a href="/admin/suscriptores?estado=pending" class="glass rounded-3xl p-5"><div class="font-display text-5xl text-[color:var(--pt)]">{stats.pending}</div><div class="mt-1 text-sm font-bold text-mute">Pendientes de confirmar</div></a>
+    <a href="/admin/suscriptores?estado=unsubscribed" class="glass rounded-3xl p-5"><div class="font-display text-5xl text-mute">{stats.unsubscribed}</div><div class="mt-1 text-sm font-bold text-mute">Se han dado de baja</div></a>
+  </div>
+
+  <h2 class="mt-10 text-2xl">Avisos predefinidos</h2>
+  <p class="text-mute text-sm mt-1">Elige uno, ajústalo si quieres y envíalo. El recordatorio «mañana es el evento» además se envía <strong>automáticamente</strong> a los inscritos el día antes.</p>
+  <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    {TEMPLATES.map((t) => (
+      <a href={`/admin/correos/nuevo?plantilla=${t.id}`} class="glass rounded-3xl p-5 hover:-translate-y-0.5 transition-transform">
+        <div class="font-display text-xl">{t.name}</div>
+        <p class="mt-1 text-sm text-mute">{t.description}</p>
+      </a>
+    ))}
+  </div>
+
+  <h2 class="mt-10 text-2xl">Enviados</h2>
+  {campaigns.length === 0 ? <p class="mt-3 text-mute">Todavía no has enviado ningún correo.</p> : (
+    <div class="mt-3 overflow-x-auto glass rounded-3xl">
+      <table class="w-full text-sm min-w-[40rem]">
+        <thead class="text-left text-mute"><tr><th class="p-3">Fecha</th><th class="p-3">Asunto</th><th class="p-3">Destinatarios</th><th class="p-3">Enviados</th><th class="p-3">Fallidos</th></tr></thead>
+        <tbody>
+          {campaigns.map((c) => (
+            <tr class="border-t border-[var(--accl)] align-top">
+              <td class="p-3 whitespace-nowrap text-mute">{fmtDateShort(c.created_at)} {fmtTime(c.created_at)}</td>
+              <td class="p-3 font-bold">{c.subject}{c.kind === 'automatico' && <span class="ml-2 text-xs font-bold px-2 py-0.5 rounded-full bg-[#e8f4fb] text-[color:var(--pt)]">Automático</span>}</td>
+              <td class="p-3">{c.audience_label || AUDIENCE_LABEL[c.audience as keyof typeof AUDIENCE_LABEL] || c.audience}</td>
+              <td class="p-3">{c.recipients - c.failed}</td>
+              <td class="p-3">{c.failed > 0 ? <span class="text-[#a3182f] font-bold" title={c.error ?? ''}>{c.failed}</span> : 0}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+</AdminLayout>

@@ -1,0 +1,48 @@
+---
+export const prerender = false;
+import Base from '../layouts/Base.astro';
+import { sql } from '../lib/db';
+import { checkToken } from '../lib/mail';
+
+const email = (Astro.url.searchParams.get('e') || '').toLowerCase();
+const token = Astro.url.searchParams.get('t') || '';
+const valid = Boolean(email) && checkToken(email, 'baja', token);
+let done = false;
+let error = false;
+
+// El POST sirve tanto para el botón de esta página como para la baja con un clic de Gmail/Outlook (List-Unsubscribe-Post).
+if (valid && Astro.request.method === 'POST') {
+  try {
+    await sql`UPDATE subscribers SET status = 'unsubscribed', unsubscribed_at = now() WHERE email = ${email}`;
+    done = true;
+  } catch (e) { console.error('baja', e); error = true; }
+}
+Astro.response.headers.set('Cache-Control', 'private, no-store');
+---
+<Base title="Darme de baja | Vórtice Eventos" description="Darse de baja de los avisos de Vórtice Eventos." noindex>
+  <section class="relative overflow-hidden pt-44 pb-32 text-center">
+    <div class="aurora" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span></div>
+    <div class="relative z-10 mx-auto max-w-2xl px-5">
+      {!valid ? (
+        <>
+          <h1 class="text-4xl md:text-6xl">Enlace no <em>válido</em></h1>
+          <p class="mt-5 text-xl text-mute">Este enlace no es correcto. Escríbenos a <a class="underline text-[color:var(--pt)]" href="mailto:info@eventosvortice.com">info@eventosvortice.com</a> y te damos de baja.</p>
+        </>
+      ) : done ? (
+        <>
+          <h1 class="text-4xl md:text-6xl">Te hemos dado de <em>baja</em></h1>
+          <p class="mt-5 text-xl text-mute">No volverás a recibir avisos de Vórtice. Si fue un error, puedes suscribirte otra vez desde la web.</p>
+          <a href="/" class="btn btn-primary mt-8">Ir al inicio</a>
+        </>
+      ) : (
+        <>
+          <h1 class="text-4xl md:text-6xl">¿Quieres darte de <em>baja</em>?</h1>
+          <p class="mt-5 text-xl text-mute">Dejaremos de enviar avisos a <strong>{email}</strong>.</p>
+          {error && <p class="mt-4 text-[#d9304f] font-bold" role="alert">No se pudo completar. Inténtalo de nuevo.</p>}
+          <form method="post" class="mt-8"><button class="btn btn-primary">Sí, darme de baja</button></form>
+          <a href="/" class="block mt-5 font-bold text-[color:var(--pt)] underline">No, volver a la web</a>
+        </>
+      )}
+    </div>
+  </section>
+</Base>

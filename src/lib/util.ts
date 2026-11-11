@@ -89,7 +89,7 @@ export function seatsLeft(e: EventRow): number | null {
 // "## Título" → encabezado · líneas que empiezan por "- " → lista · el resto → párrafo.
 // Los bloques se separan con una línea en blanco.
 
-export type Block = { t: 'h' | 'p'; text: string } | { t: 'ul'; items: string[] };
+export type Block = { t: 'h' | 'p'; text: string } | { t: 'ul'; items: string[] } | { t: 'img'; src: string; alt: string };
 
 export function parseContent(content: string): Block[] {
   return (content || '')
@@ -98,11 +98,22 @@ export function parseContent(content: string): Block[] {
     .map((b) => b.trim())
     .filter(Boolean)
     .map((b): Block => {
+      const img = /^!\[([^\]]*)\]\(((?:https:\/\/|\/)[^)\s]+)\)$/.exec(b);
+      if (img) return { t: 'img', alt: img[1], src: img[2] };
       if (b.startsWith('## ')) return { t: 'h', text: b.slice(3).trim() };
       const lines = b.split('\n');
       if (lines.every((l) => l.trim().startsWith('- '))) return { t: 'ul', items: lines.map((l) => l.trim().slice(2).trim()) };
       return { t: 'p', text: lines.join(' ') };
     });
+}
+
+/** Texto del artículo → HTML seguro: **negrita**, *cursiva* y [enlaces](https://…). Todo lo demás se escapa. */
+export function inlineHtml(text: string): string {
+  const esc = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return esc
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>')
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+|\/[^)\s]*)\)/g, '<a href="$2" class="underline underline-offset-4 text-[color:var(--pt)] font-semibold">$1</a>');
 }
 
 export function readingMinutes(content: string): number {

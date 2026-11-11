@@ -93,16 +93,34 @@ try {
       <textarea class="field font-normal" name="description" rows="2" maxlength="300">{v.description}</textarea>
     </label>
     <ImageField name="cover_url" label="Foto de portada" value={v.cover_url} />
-    <label class="grid gap-1.5 text-sm font-bold">Texto del artículo *
-      <textarea class="field font-normal font-mono text-[15px] leading-relaxed" name="content" rows="18" required>{v.content}</textarea>
-    </label>
-    <div class="rounded-2xl bg-[#e8f4fb] p-4 text-sm">
-      <strong>Cómo se escribe:</strong>
-      <ul class="mt-1 grid gap-1 text-mute">
-        <li>Deja una <strong>línea en blanco</strong> entre párrafos.</li>
-        <li>Para un título de sección, empieza la línea con <code class="font-bold">## </code> (dos almohadillas y un espacio).</li>
-        <li>Para una lista, empieza cada línea con <code class="font-bold">- </code> (guion y espacio).</li>
-      </ul>
+    <div class="grid gap-2">
+      <span class="text-sm font-bold">Texto del artículo *</span>
+      <div class="flex flex-wrap gap-2" role="toolbar" aria-label="Formato del texto">
+        <button type="button" data-fmt="h" class="chip">Título</button>
+        <button type="button" data-fmt="b" class="chip"><strong>N</strong>egrita</button>
+        <button type="button" data-fmt="i" class="chip"><em>C</em>ursiva</button>
+        <button type="button" data-fmt="ul" class="chip">Lista</button>
+        <button type="button" data-fmt="a" class="chip">Enlace</button>
+        <label class="chip cursor-pointer">Foto en el texto<input type="file" accept="image/*" class="sr-only" id="imgfile" /></label>
+        <span id="imgstatus" class="text-sm text-mute self-center" role="status"></span>
+      </div>
+      <p class="text-xs text-mute">Selecciona un trozo de texto y pulsa un botón. Deja una línea en blanco para separar párrafos.</p>
+      <div class="grid gap-4 lg:grid-cols-2">
+        <textarea id="content" class="field font-normal font-mono text-[15px] leading-relaxed" name="content" rows="22" required>{v.content}</textarea>
+        <div class="rounded-2xl border-2 border-[var(--accl)] bg-white p-5 overflow-auto max-h-[36rem]">
+          <p class="text-xs font-bold uppercase tracking-widest text-mute mb-3">Vista previa</p>
+          <div id="preview" class="grid gap-4 text-[17px] leading-relaxed"></div>
+        </div>
+      </div>
+    </div>
+    <div class="rounded-2xl border-2 border-[var(--accl)] bg-white p-5">
+      <p class="text-xs font-bold uppercase tracking-widest text-mute">Así saldrá en Google</p>
+      <div class="mt-2">
+        <div class="text-sm text-[#1a6f3d] truncate">eventosvortice.com › blog › <span id="g-slug"></span></div>
+        <div id="g-title" class="text-xl text-[#1a0dab] leading-snug"></div>
+        <div id="g-desc" class="text-sm text-[#4d5156]"></div>
+      </div>
+      <p id="g-count" class="mt-3 text-xs font-bold"></p>
     </div>
     <label class="grid gap-1.5 text-sm font-bold">Servicio relacionado (para el botón de presupuesto)
       <select class="field font-normal" name="service">
@@ -114,8 +132,8 @@ try {
       <input class="mt-1 size-5 accent-[#0a9ddb]" type="checkbox" name="published" checked={v.published} />
       <span><strong class="block">Publicado en la web</strong><span class="text-sm text-mute">Si no lo marcas, queda como borrador y no lo ve nadie.</span></span>
     </label>
-    <details class="text-sm">
-      <summary class="font-bold cursor-pointer">Opciones de Google (avanzado)</summary>
+    <details class="text-sm" open>
+      <summary class="font-bold cursor-pointer">Opciones de Google</summary>
       <div class="grid gap-4 mt-3">
         <label class="grid gap-1.5 font-bold">Título para Google
           <input class="field font-normal" name="meta_title" value={v.meta_title} maxlength="160" placeholder="Si lo dejas vacío: «Título | Vórtice Eventos»" />
@@ -130,4 +148,76 @@ try {
       <a class="btn btn-white border-2 border-[var(--accl)]" href="/admin/blog">Cancelar</a>
     </div>
   </form>
+
+  <script is:inline>
+    (function () {
+      var ta = document.getElementById('content'), pv = document.getElementById('preview'), f = ta.form;
+      function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+      function inl(s) {
+        return esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>')
+          .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+|\/[^)\s]*)\)/g, '<a href="$2" class="underline text-[#0b7fb5] font-semibold">$1</a>');
+      }
+      function render() {
+        pv.innerHTML = ta.value.replace(/\r\n/g, '\n').split(/\n{2,}/).map(function (b) { return b.trim(); }).filter(Boolean).map(function (b) {
+          var m = /^!\[([^\]]*)\]\(((?:https:\/\/|\/)[^)\s]+)\)$/.exec(b);
+          if (m) return '<figure><img src="' + esc(m[2]) + '" alt="' + esc(m[1]) + '" class="w-full rounded-2xl"><figcaption class="text-sm text-[#4a6678] text-center mt-1">' + esc(m[1]) + '</figcaption></figure>';
+          if (b.indexOf('## ') === 0) return '<h2 class="text-2xl font-display">' + inl(b.slice(3)) + '</h2>';
+          var ls = b.split('\n');
+          if (ls.every(function (l) { return l.trim().indexOf('- ') === 0; })) return '<ul class="list-disc pl-6">' + ls.map(function (l) { return '<li>' + inl(l.trim().slice(2)) + '</li>'; }).join('') + '</ul>';
+          return '<p>' + inl(ls.join(' ')) + '</p>';
+        }).join('') || '<p class="text-[#4a6678]">Aquí verás cómo queda.</p>';
+      }
+      ta.addEventListener('input', render); render();
+
+      function wrap(before, after, placeholder) {
+        var s = ta.selectionStart, e = ta.selectionEnd, sel = ta.value.slice(s, e) || placeholder;
+        ta.setRangeText(before + sel + after, s, e, 'select'); ta.focus(); ta.selectionStart = s + before.length; ta.selectionEnd = s + before.length + sel.length; render();
+      }
+      document.querySelectorAll('[data-fmt]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var k = b.dataset.fmt;
+          if (k === 'b') wrap('**', '**', 'texto en negrita');
+          else if (k === 'i') wrap('*', '*', 'texto en cursiva');
+          else if (k === 'h') wrap('\n\n## ', '\n\n', 'Título de la sección');
+          else if (k === 'ul') {
+            var s = ta.selectionStart, e = ta.selectionEnd, sel = ta.value.slice(s, e) || 'primer punto\nsegundo punto';
+            ta.setRangeText('\n\n' + sel.split('\n').map(function (l) { return '- ' + l.replace(/^- /, ''); }).join('\n') + '\n\n', s, e, 'end'); ta.focus(); render();
+          } else if (k === 'a') {
+            var url = prompt('¿A qué dirección lleva el enlace? (empieza por https://)'); if (!url) return;
+            wrap('[', '](' + url + ')', 'texto del enlace');
+          }
+        });
+      });
+      document.getElementById('imgfile').addEventListener('change', async function (ev) {
+        var file = ev.target.files && ev.target.files[0]; if (!file) return;
+        var st = document.getElementById('imgstatus'); st.textContent = 'Subiendo foto…';
+        try {
+          var blob = file;
+          if (/^image\/(jpeg|png|webp)$/.test(file.type)) {
+            var bmp = await createImageBitmap(file), k = Math.min(1, 1600 / Math.max(bmp.width, bmp.height)), c = document.createElement('canvas');
+            c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k); c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+            blob = await new Promise(function (ok) { c.toBlob(ok, 'image/webp', 0.85); }) || file;
+          }
+          var fd = new FormData(); fd.append('file', blob, file.name.replace(/\.[^.]+$/, '') + (blob.type === 'image/webp' ? '.webp' : ''));
+          var r = await fetch('/api/admin/upload', { method: 'POST', body: fd }), j = await r.json();
+          if (!r.ok) throw new Error(j.error || 'Error al subir');
+          var alt = prompt('Describe la foto en pocas palabras (ayuda a Google y a personas con discapacidad visual):') || '';
+          var s = ta.selectionStart; ta.setRangeText('\n\n![' + alt.replace(/[\[\]]/g, '') + '](' + j.url + ')\n\n', s, ta.selectionEnd, 'end'); render(); st.textContent = 'Foto añadida ✓';
+        } catch (x) { st.textContent = x.message || 'No se pudo subir la foto.'; }
+        ev.target.value = '';
+      });
+
+      // Simulación de Google + contadores
+      var gt = document.getElementById('g-title'), gd = document.getElementById('g-desc'), gs = document.getElementById('g-slug'), gc = document.getElementById('g-count');
+      function slugify(s) { return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80); }
+      function google() {
+        var title = f.title.value.trim(), meta = f.meta_title.value.trim() || (title ? title + ' | Vórtice Eventos' : ''), desc = f.description.value.trim();
+        gt.textContent = meta || 'Título del artículo'; gd.textContent = desc || 'Escribe una descripción corta: es el texto que aparece bajo el título en Google.';
+        gs.textContent = f.slug.value.trim() || slugify(title) || 'tu-articulo';
+        var tl = meta.length, dl = desc.length;
+        gc.innerHTML = '<span style="color:' + (tl >= 30 && tl <= 60 ? '#0f6b34' : '#8a5a00') + '">Título: ' + tl + ' caracteres (ideal 30-60)</span> &nbsp;·&nbsp; <span style="color:' + (dl >= 120 && dl <= 160 ? '#0f6b34' : '#8a5a00') + '">Descripción: ' + dl + ' caracteres (ideal 120-160)</span>';
+      }
+      ['title', 'meta_title', 'description', 'slug'].forEach(function (n) { f[n].addEventListener('input', google); }); google();
+    })();
+  </script>
 </AdminLayout>

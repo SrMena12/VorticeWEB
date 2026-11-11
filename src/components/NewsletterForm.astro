@@ -1,0 +1,35 @@
+---
+interface Props { dark?: boolean; }
+const { dark = false } = Astro.props;
+---
+<form data-newsletter class="grid gap-3 max-w-md" novalidate>
+  <div class="absolute -left-[9999px]" aria-hidden="true"><label>No rellenar<input name="website" tabindex="-1" autocomplete="off" /></label></div>
+  <div class="flex flex-col sm:flex-row gap-2">
+    <input class="field font-normal !text-[#0d2f4a]" type="email" name="email" required autocomplete="email" placeholder="Tu email" aria-label="Tu email" />
+    <button class="btn btn-ghost !py-3 shrink-0" type="submit">Avisadme</button>
+  </div>
+  <label class={`flex items-start gap-2 text-xs ${dark ? 'text-[#a9c4d9]' : 'text-mute'}`}>
+    <input class="mt-0.5 size-4 shrink-0 accent-[#ffc933]" type="checkbox" name="consent" required />
+    <span>Quiero recibir avisos de próximos eventos. He leído la <a class="underline" href="/privacidad">política de privacidad</a>. Puedes darte de baja cuando quieras.</span>
+  </label>
+  <p data-msg class={`text-sm font-bold ${dark ? 'text-[#8fdcff]' : 'text-[color:var(--pt)]'}`} role="status" hidden></p>
+</form>
+<script is:inline>
+  document.querySelectorAll('form[data-newsletter]').forEach(function (f) {
+    if (f.dataset.ready) return; f.dataset.ready = '1';
+    var msg = f.querySelector('[data-msg]'), btn = f.querySelector('button');
+    f.addEventListener('submit', async function (e) {
+      e.preventDefault(); msg.hidden = true;
+      if (!f.checkValidity()) { f.reportValidity(); return; }
+      btn.disabled = true;
+      try {
+        var r = await fetch('/api/suscribir', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: f.email.value, website: f.website.value, consent: f.consent.checked }) });
+        var j = await r.json().catch(function () { return {}; });
+        msg.textContent = j.message || j.error || 'No se pudo completar.'; msg.hidden = false;
+        if (r.ok && j.ok) f.reset();
+      } catch (x) { msg.textContent = 'Sin conexión. Inténtalo de nuevo.'; msg.hidden = false; }
+      btn.disabled = false;
+    });
+  });
+</script>

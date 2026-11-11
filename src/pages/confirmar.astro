@@ -1,0 +1,37 @@
+---
+export const prerender = false;
+import Base from '../layouts/Base.astro';
+import { sql } from '../lib/db';
+import { checkToken } from '../lib/mail';
+
+const email = (Astro.url.searchParams.get('e') || '').toLowerCase();
+const token = Astro.url.searchParams.get('t') || '';
+let state: 'ok' | 'bad' | 'error' = 'bad';
+if (email && checkToken(email, 'confirmar', token)) {
+  try {
+    const r = await sql`UPDATE subscribers SET status = 'active', consent_at = now(), unsubscribed_at = NULL WHERE email = ${email} RETURNING id`;
+    state = r.length ? 'ok' : 'bad';
+  } catch (e) { console.error('confirmar', e); state = 'error'; }
+}
+Astro.response.headers.set('Cache-Control', 'private, no-store');
+---
+<Base title="Confirmar suscripción | Vórtice Eventos" description="Confirmación de suscripción a los avisos de Vórtice Eventos." noindex>
+  <section class="relative overflow-hidden pt-44 pb-32 text-center">
+    <div class="aurora" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span></div>
+    <div class="relative z-10 mx-auto max-w-2xl px-5">
+      {state === 'ok' ? (
+        <>
+          <h1 class="text-4xl md:text-6xl">¡Suscripción <em>confirmada</em>!</h1>
+          <p class="mt-5 text-xl text-mute">Te avisaremos de los próximos eventos. Puedes darte de baja cuando quieras desde cualquier correo.</p>
+          <a href="/eventos" class="btn btn-primary mt-8">Ver próximos eventos</a>
+        </>
+      ) : (
+        <>
+          <h1 class="text-4xl md:text-6xl">Enlace no <em>válido</em></h1>
+          <p class="mt-5 text-xl text-mute">{state === 'error' ? 'Ha ocurrido un error. Inténtalo de nuevo en unos minutos.' : 'Este enlace ha caducado o no es correcto. Puedes volver a suscribirte desde la web.'}</p>
+          <a href="/" class="btn btn-primary mt-8">Ir al inicio</a>
+        </>
+      )}
+    </div>
+  </section>
+</Base>

@@ -1,0 +1,97 @@
+---
+export const prerender = false;
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { sql } from '../../lib/db';
+import { subscriberStats } from '../../lib/audiences';
+import { clean, isEmail, fmtDateShort } from '../../lib/util';
+
+const MSG: Record<string, string> = { creado: 'Suscriptor añadido.', borrado: 'Suscriptor eliminado.', existe: 'Ese email ya estaba en la lista.' };
+const flash = MSG[Astro.url.searchParams.get('msg') ?? ''] ?? '';
+const estado = ['active', 'pending', 'unsubscribed'].includes(Astro.url.searchParams.get('estado') ?? '') ? Astro.url.searchParams.get('estado')! : '';
+let rows: any[] = [];
+let stats = { active: 0, pending: 0, unsubscribed: 0 };
+let errors: string[] = [];
+let error = false;
+
+try {
+  if (Astro.request.method === 'POST') {
+    const form = await Astro.request.formData();
+    const action = String(form.get('action') || '');
+    if (action === 'delete') {
+      await sql`DELETE FROM subscribers WHERE id = ${Number(form.get('id'))}`;
+      return Astro.redirect('/admin/suscriptores?msg=borrado');
+    }
+    if (action === 'add') {
+      const email = clean(form.get('email'), 200).toLowerCase();
+      const name = clean(form.get('name'), 120);
+      if (!isEmail(email)) errors.push('Escribe un email válido.');
+      if (form.get('consent') !== 'on') errors.push('Marca que tienes su consentimiento para escribirle.');
+      if (!errors.length) {
+        const r = await sql`INSERT INTO subscribers (email, name, status, source, consent_at) VALUES (${email}, ${name}, 'active', 'manual', now()) ON CONFLICT (email) DO NOTHING RETURNING id`;
+        return Astro.redirect(`/admin/suscriptores?msg=${r.length ? 'creado' : 'existe'}`);
+      }
+    }
+  }
+  stats = await subscriberStats();
+  rows = estado
+    ? await sql`SELECT s.*, (SELECT count(*)::int FROM registrations r WHERE lower(r.email) = s.email) AS eventos FROM subscribers s WHERE status = ${estado} ORDER BY created_at DESC LIMIT 500`
+    : await sql`SELECT s.*, (SELECT count(*)::int FROM registrations r WHERE lower(r.email) = s.email) AS eventos FROM subscribers s ORDER BY created_at DESC LIMIT 500`;
+} catch (e) { console.error('suscriptores', e); error = true; }
+
+const label: Record<string, string> = { active: 'Activo', pending: 'Pendiente', unsubscribed: 'De baja' };
+const badge: Record<string, string> = { active: 'bg-[#d9f7e3] text-[#0f6b34]', pending: 'bg-[#fff1cc] text-[#8a5a00]', unsubscribed: 'bg-[#e8eef3] text-[#44596a]' };
+const tabs = [['', 'Todos'], ['active', `Activos (${stats.active})`], ['pending', `Pendientes (${stats.pending})`], ['unsubscribed', `De baja (${stats.unsubscribed})`]];
+---
+<AdminLayout title="Suscriptores">
+  <div class="flex flex-wrap items-center gap-3">
+    <h1 class="text-4xl grow">Suscriptores</h1>
+    <a class="btn btn-dark !py-2.5 !px-5 text-sm" href="/admin/suscriptores.csv">Descargar Excel (CSV)</a>
+    <a class="btn btn-primary" href="/admin/correos/nuevo?plantilla=nuevo-evento">Escribirles</a>
+  </div>
+  <p class="mt-2 text-mute">Personas que han aceptado recibir avisos: desde el formulario de la web, o marcando la casilla al inscribirse en un evento.</p>
+  {flash && <p class="mt-4 p-3 rounded-2xl bg-[#d9f7e3] text-[#0f6b34] font-bold" role="status">{flash}</p>}
+  {error && <p class="mt-4 p-3 rounded-2xl bg-[#ffe3e8] text-[#a3182f] font-bold" role="alert">No se pudo leer la base de datos.</p>}
+  {errors.length > 0 && <ul class="mt-4 p-4 rounded-2xl bg-[#ffe3e8] text-[#a3182f] font-bold list-disc pl-8" role="alert">{errors.map((e) => <li>{e}</li>)}</ul>}
+
+  <div class="mt-6 flex flex-wrap gap-2">
+    {tabs.map(([k, l]) => <a href={k ? `/admin/suscriptores?estado=${k}` : '/admin/suscriptores'} class="chip" aria-pressed={estado === k ? 'true' : 'false'}>{l}</a>)}
+  </div>
+
+  {rows.length === 0 && !error ? <p class="mt-6 text-mute">No hay suscriptores en esta vista.</p> : (
+    <div class="mt-4 overflow-x-auto glass rounded-3xl">
+      <table class="w-full text-sm min-w-[42rem]">
+        <thead class="text-left text-mute"><tr><th class="p-3">Email</th><th class="p-3">Nombre</th><th class="p-3">Estado</th><th class="p-3">Origen</th><th class="p-3">Eventos</th><th class="p-3">Alta</th><th class="p-3"></th></tr></thead>
+        <tbody>
+          {rows.map((s) => (
+            <tr class="border-t border-[var(--accl)]">
+              <td class="p-3 font-bold">{s.email}</td>
+              <td class="p-3">{s.name}</td>
+              <td class="p-3"><span class={`text-xs font-bold px-3 py-1 rounded-full ${badge[s.status]}`}>{label[s.status]}</span></td>
+              <td class="p-3 text-mute">{s.source === 'inscripcion' ? 'Al inscribirse' : s.source === 'manual' ? 'Manual' : 'Web'}</td>
+              <td class="p-3">{s.eventos}</td>
+              <td class="p-3 whitespace-nowrap text-mute">{fmtDateShort(s.created_at)}</td>
+              <td class="p-3">
+                <form method="post" data-confirm={`¿Eliminar a ${s.email} de la lista? (Si prefieres conservar que se dio de baja, no lo borres.)`}>
+                  <input type="hidden" name="action" value="delete" /><input type="hidden" name="id" value={s.id} />
+                  <button class="font-bold text-[#d9304f] hover:underline">Eliminar</button>
+                </form>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )}
+
+  <details class="mt-8 glass rounded-3xl p-5">
+    <summary class="font-display text-xl cursor-pointer">Añadir un suscriptor a mano</summary>
+    <form method="post" class="mt-4 grid gap-4 sm:grid-cols-2">
+      <input type="hidden" name="action" value="add" />
+      <label class="grid gap-1.5 text-sm font-bold">Email<input class="field font-normal" type="email" name="email" required /></label>
+      <label class="grid gap-1.5 text-sm font-bold">Nombre (opcional)<input class="field font-normal" name="name" /></label>
+      <label class="sm:col-span-2 flex items-start gap-3 text-sm"><input class="mt-0.5 size-5 accent-[#0a9ddb]" type="checkbox" name="consent" />
+        <span>Confirmo que esta persona ha aceptado recibir avisos de Vórtice (es obligatorio por ley antes de escribirle).</span></label>
+      <div class="sm:col-span-2"><button class="btn btn-primary" type="submit">Añadir</button></div>
+    </form>
+  </details>
+</AdminLayout>
