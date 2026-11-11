@@ -1,4 +1,5 @@
 ---
+import Pic from '../components/Pic.astro';
 export const prerender = false;
 import Base from '../layouts/Base.astro';
 import { SITE, SERVICES, GROUPS, ACCENT, PHOTO } from '../data/site';
@@ -50,20 +51,20 @@ const steps = [
     <div class="aurora" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span></div>
     <div class="relative z-10 mx-auto max-w-6xl px-5 w-full grid lg:grid-cols-12 gap-12 items-center">
       <div class="lg:col-span-7">
-        <p class="reveal inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 text-sm font-semibold">
+        <p class="rise inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 text-sm font-semibold">
           <span class="size-2 rounded-full bg-[color:var(--acc)]"></span> Agencia de eventos en Toledo
         </p>
-        <h1 class="reveal mt-6 text-[clamp(3rem,6.6vw,6rem)] leading-[0.95]" style="--delay:100ms">
+        <h1 class="rise mt-6 text-[clamp(3rem,6.6vw,6rem)] leading-[0.95]" style="--delay:100ms">
           Eventos en Toledo que <em>nadie olvida.</em>
         </h1>
-        <p class="reveal mt-7 text-lg md:text-xl text-mute max-w-xl" style="--delay:200ms">
+        <p class="rise mt-7 text-lg md:text-xl text-mute max-w-xl" style="--delay:200ms">
           Lo organizamos todo para <strong class="text-fg"><span id="rot">{words[0]}</span></strong>. Tú solo disfrutas.
         </p>
-        <div class="reveal mt-9 flex flex-wrap gap-3" style="--delay:300ms">
+        <div class="rise mt-9 flex flex-wrap gap-3" style="--delay:300ms">
           <a href="/contacto" class="btn btn-primary mag text-lg">Pide presupuesto gratis →</a>
           <a href={SITE.whatsapp} class="btn btn-ghost text-lg">WhatsApp</a>
         </div>
-        <ul class="reveal mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-mute" style="--delay:400ms">
+        <ul class="rise mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-mute" style="--delay:400ms">
           <li><span class="text-[color:var(--pt)]">✦</span> Todo incluido</li>
           <li><span class="text-[color:var(--pt)]">✦</span> Respuesta en 24 h</li>
           <li><span class="text-[color:var(--pt)]">✦</span> Sin compromiso</li>
@@ -72,14 +73,14 @@ const steps = [
 
       <div class="lg:col-span-5 relative h-[22rem] sm:h-[26rem] lg:h-[34rem]" aria-hidden="true">
         <div class="float-card absolute left-[6%] top-0 w-[58%]" style="--d:18; --r:-4deg">
-          <div class="shot aspect-[3/4]" style="--a:#2f8cff; --b:#19b5ff"><img src="/img/serv-team-building-toledo.webp" alt="" width="1400" height="933" loading="eager" decoding="async" style="object-position:30% 50%" /><span class="absolute left-3 bottom-3 rounded-full bg-black/45 backdrop-blur px-3 py-1">Team building</span></div>
+          <div class="shot aspect-[3/4]" style="--a:#2f8cff; --b:#19b5ff"><Pic src="/img/serv-team-building-toledo.webp" alt="" width="1400" height="933" loading="eager" decoding="async" style="object-position:30% 50%" /><span class="absolute left-3 bottom-3 rounded-full bg-black/45 backdrop-blur px-3 py-1">Team building</span></div>
         </div>
         <div class="float-card absolute right-0 top-[18%] w-[48%]" style="--d:-26; --r:5deg">
-          <div class="shot aspect-square" style="--a:#8fdcff; --b:#19b5ff"><img src="/img/serv-despedidas-de-soltero-toledo.webp" alt="" width="1400" height="788" loading="eager" decoding="async" /><span class="absolute left-3 bottom-3 rounded-full bg-black/45 backdrop-blur px-3 py-1">Despedidas</span></div>
+          <div class="shot aspect-square" style="--a:#8fdcff; --b:#19b5ff"><Pic src="/img/serv-despedidas-de-soltero-toledo.webp" alt="" width="1400" height="788" loading="eager" decoding="async" /><span class="absolute left-3 bottom-3 rounded-full bg-black/45 backdrop-blur px-3 py-1">Despedidas</span></div>
         </div>
         <div class="float-card absolute left-[22%] bottom-0 w-[50%]" style="--d:12; --r:2deg">
           <div class="shot aspect-[4/3]" style="--a:#3ee0d0; --b:#2f8cff">
-            <img src="/img/evento-calle.webp" alt="" width="1600" height="693" loading="eager" decoding="async" />
+            <Pic src="/img/evento-calle.webp" alt="" width="1600" height="693" loading="eager" decoding="async" />
             <span class="absolute left-3 bottom-3 rounded-full bg-black/45 backdrop-blur px-3 py-1">Ayuntamientos</span>
           </div>
         </div>
@@ -130,7 +131,7 @@ const steps = [
         return (
           <a href={`/servicios/${s.slug}`} data-group={s.group} class={`spot reveal group flex flex-col ${big ? 'lg:col-span-4' : 'lg:col-span-2'}`} style={`--a:${a}; --b:${b}; --delay:${(i % 3) * 90}ms`}>
             <div class="overflow-hidden h-44 md:h-52 shrink-0">
-              <img src={ph.src} alt={ph.alt} width="1400" height="933" loading="lazy" decoding="async" class="size-full object-cover transition-transform duration-700 group-hover:scale-105" style={ph.pos ? `object-position:${ph.pos}` : undefined} />
+              <Pic src={ph.src} alt={ph.alt} width="1400" height="933" loading="lazy" decoding="async" class="size-full object-cover transition-transform duration-700 group-hover:scale-105" style={ph.pos ? `object-position:${ph.pos}` : undefined} />
             </div>
             <div class="p-6 flex flex-col flex-1">
               <span class="text-xs font-extrabold tracking-[0.18em] uppercase" style={`color:${a}`}>{GROUPS[s.group].label}</span>
@@ -159,7 +160,7 @@ const steps = [
         </div>
       </div>
       <div class="relative min-h-72 md:min-h-full">
-        <img src="/img/adv-aerea.webp" alt="Vista aérea del parque Adventrix en Toledo" class="absolute inset-0 size-full object-cover" width="1400" height="788" loading="lazy" decoding="async" />
+        <Pic src="/img/adv-aerea.webp" alt="Vista aérea del parque Adventrix en Toledo" class="absolute inset-0 size-full object-cover" width="1400" height="788" loading="lazy" decoding="async" />
       </div>
     </div>
   </section>
@@ -167,7 +168,7 @@ const steps = [
   <!-- TOLEDO (SEO local) -->
   <section class="mx-auto max-w-6xl px-5 pt-28 grid gap-10 lg:grid-cols-2 items-center">
     <div class="reveal shot aspect-[4/3]" style="--a:#0a9ddb; --b:#19b5ff">
-      <img src="/img/toledo-alcazar.webp" alt="Vista panorámica de Toledo con el Alcázar, donde Vórtice Eventos organiza eventos" width="1400" height="927" loading="lazy" decoding="async" />
+      <Pic src="/img/toledo-alcazar.webp" alt="Vista panorámica de Toledo con el Alcázar, donde Vórtice Eventos organiza eventos" width="1400" height="927" loading="lazy" decoding="async" />
     </div>
     <div>
       <p class="reveal text-[color:var(--pt)] font-bold text-sm tracking-[0.2em] uppercase">Agencia de eventos en Toledo</p>

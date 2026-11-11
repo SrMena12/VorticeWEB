@@ -1,4 +1,5 @@
 ---
+import Pic from '../../components/Pic.astro';
 export const prerender = false;
 import Base from '../../layouts/Base.astro';
 import { POSTS } from '../../data/blog';
@@ -37,7 +38,7 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
   <section class="mx-auto max-w-6xl px-5 pt-8 grid gap-5 md:grid-cols-3">
     {cards.map((p, i) => (
       <a href={`/blog/${p.slug}`} class="spot reveal group flex flex-col" style={`--delay:${i * 90}ms`}>
-        <div class="overflow-hidden aspect-[16/10]"><img src={p.cover} alt="" width="1400" height="933" loading="lazy" decoding="async" class="size-full object-cover transition-transform duration-700 group-hover:scale-105" /></div>
+        <div class="overflow-hidden aspect-[16/10]"><Pic sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" src={p.cover} alt="" width="1400" height="933" loading="lazy" decoding="async" class="size-full object-cover transition-transform duration-700 group-hover:scale-105" /></div>
         <div class="p-6 flex flex-col flex-1">
           <span class="text-xs font-extrabold tracking-[0.18em] uppercase text-[color:var(--pt)]">{p.readMin} min de lectura</span>
           <h2 class="mt-2 text-2xl">{p.title}</h2>

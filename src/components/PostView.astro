@@ -1,4 +1,5 @@
 ---
+import Pic from './Pic.astro';
 import Base from '../layouts/Base.astro';
 import CtaBand from './CtaBand.astro';
 import { type PostRow } from '../lib/queries';
@@ -43,12 +44,12 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
       </div>
     </header>
     <div class="mx-auto max-w-3xl px-5">
-      {p.cover_url && <img src={cover} alt={p.title} width="1400" height="933" class="w-full aspect-[16/9] object-cover rounded-[1.75rem] border-4 border-white shadow-[0_18px_40px_-20px_rgba(13,47,74,.6)]" />}
+      {p.cover_url && <Pic src={cover} alt={p.title} width="1400" height="933" class="w-full aspect-[16/9] object-cover rounded-[1.75rem] border-4 border-white shadow-[0_18px_40px_-20px_rgba(13,47,74,.6)]" />}
       <div class="mt-10 grid gap-5 text-lg leading-relaxed">
         {blocks.map((b) =>
           b.t === 'h' ? <h2 class="text-3xl md:text-4xl mt-6">{b.text}</h2>
           : b.t === 'ul' ? <ul class="list-disc pl-6 grid gap-1.5">{b.items.map((i) => <li set:html={inlineHtml(i)} />)}</ul>
-          : b.t === 'img' ? <figure class="my-2"><img src={b.src} alt={b.alt} loading="lazy" decoding="async" class="w-full rounded-[1.5rem] border-4 border-white shadow-[0_18px_40px_-20px_rgba(13,47,74,.6)]" />{b.alt && <figcaption class="mt-2 text-sm text-mute text-center">{b.alt}</figcaption>}</figure>
+          : b.t === 'img' ? <figure class="my-2"><Pic src={b.src} alt={b.alt} loading="lazy" decoding="async" class="w-full rounded-[1.5rem] border-4 border-white shadow-[0_18px_40px_-20px_rgba(13,47,74,.6)]" />{b.alt && <figcaption class="mt-2 text-sm text-mute text-center">{b.alt}</figcaption>}</figure>
           : <p set:html={inlineHtml(b.text)} />
         )}
       </div>

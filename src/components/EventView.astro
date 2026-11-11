@@ -1,4 +1,5 @@
 ---
+import Pic from './Pic.astro';
 import Base from '../layouts/Base.astro';
 import { eventState, STATE_LABEL, seatsLeft, fmtDate, fmtTime, type EventRow } from '../lib/util';
 import { SITE } from '../data/site';
@@ -50,7 +51,7 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-re
 
     <div class="mx-auto max-w-5xl px-5 grid gap-10 lg:grid-cols-5">
       <div class="lg:col-span-3">
-        {ev.image_url && <img src={ev.image_url} alt={ev.title} width="1400" height="875" class="w-full aspect-[16/10] object-cover rounded-[1.75rem] border-4 border-white shadow-[0_18px_40px_-20px_rgba(13,47,74,.6)]" />}
+        {ev.image_url && <Pic src={ev.image_url} alt={ev.title} width="1400" height="875" class="w-full aspect-[16/10] object-cover rounded-[1.75rem] border-4 border-white shadow-[0_18px_40px_-20px_rgba(13,47,74,.6)]" />}
         {ev.summary && <p class="mt-8 text-2xl font-display leading-snug">{ev.summary}</p>}
         <div class="mt-6 grid gap-4 text-lg leading-relaxed">
           {paragraphs.map((p) => <p>{p}</p>)}
