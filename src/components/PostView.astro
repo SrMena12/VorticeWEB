@@ -2,7 +2,7 @@
 import Base from '../layouts/Base.astro';
 import CtaBand from './CtaBand.astro';
 import { type PostRow } from '../lib/queries';
-import { parseContent, readingMinutes, fmtDate } from '../lib/util';
+import { parseContent, readingMinutes, fmtDate, inlineHtml } from '../lib/util';
 import { SITE } from '../data/site';
 
 const { p, others } = Astro.props as { p: PostRow; others: PostRow[] };
@@ -47,8 +47,9 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-re
       <div class="mt-10 grid gap-5 text-lg leading-relaxed">
         {blocks.map((b) =>
           b.t === 'h' ? <h2 class="text-3xl md:text-4xl mt-6">{b.text}</h2>
-          : b.t === 'ul' ? <ul class="list-disc pl-6 grid gap-1.5">{b.items.map((i) => <li>{i}</li>)}</ul>
-          : <p>{b.text}</p>
+          : b.t === 'ul' ? <ul class="list-disc pl-6 grid gap-1.5">{b.items.map((i) => <li set:html={inlineHtml(i)} />)}</ul>
+          : b.t === 'img' ? <figure class="my-2"><img src={b.src} alt={b.alt} loading="lazy" decoding="async" class="w-full rounded-[1.5rem] border-4 border-white shadow-[0_18px_40px_-20px_rgba(13,47,74,.6)]" />{b.alt && <figcaption class="mt-2 text-sm text-mute text-center">{b.alt}</figcaption>}</figure>
+          : <p set:html={inlineHtml(b.text)} />
         )}
       </div>
       <p class="mt-10 spot p-6"><strong class="font-display text-2xl block">¿Quieres que nos encarguemos?</strong><a class="mt-2 inline-block font-bold text-[color:var(--pt)] underline underline-offset-4" href="/contacto">Cuéntanos tu idea</a></p>

@@ -89,6 +89,10 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-re
                 <input class="mt-0.5 size-5 shrink-0 accent-[#0a9ddb]" type="checkbox" name="privacy" required />
                 <span>He leído y acepto la <a class="underline font-bold text-[color:var(--pt)]" href="/privacidad" target="_blank" rel="noopener">política de privacidad</a>.</span>
               </label>
+              <label class="flex items-start gap-3 text-sm">
+                <input class="mt-0.5 size-5 shrink-0 accent-[#0a9ddb]" type="checkbox" name="marketing" />
+                <span>Quiero recibir avisos de próximos eventos de Vórtice (opcional, puedes darte de baja cuando quieras).</span>
+              </label>
               <p id="regerr" class="text-[#d9304f] text-sm font-bold" role="alert" hidden></p>
               <button id="regbtn" class="btn btn-primary w-full" type="submit">Apuntarme</button>
             </form>
@@ -121,7 +125,7 @@ Astro.response.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-re
       f.addEventListener('submit', async function (e) {
         e.preventDefault(); err.hidden = true;
         if (!f.checkValidity()) { f.reportValidity(); return; }
-        var d = Object.fromEntries(new FormData(f)); d.privacy = f.privacy.checked;
+        var d = Object.fromEntries(new FormData(f)); d.privacy = f.privacy.checked; d.marketing = f.marketing.checked;
         btn.disabled = true; var label = btn.textContent; btn.textContent = 'Enviando…';
         try {
           var r = await fetch('/api/inscripcion', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(d) });

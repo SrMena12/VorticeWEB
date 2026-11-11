@@ -26,6 +26,7 @@ export const POST: APIRoute = async ({ request }) => {
   const email = clean(d.email, 200).toLowerCase();
   const phone = clean(d.phone, 40);
   const notes = clean(d.notes, 500);
+  const marketing = d.marketing === true || d.marketing === 'on' || d.marketing === 'true';
   const attendees = Math.min(10, Math.max(1, Math.floor(Number(d.attendees) || 1)));
 
   if (!Number.isInteger(eventId) || eventId < 1) return json({ ok: false, error: 'Evento no válido.' }, 400);
@@ -45,8 +46,8 @@ export const POST: APIRoute = async ({ request }) => {
     const res = await sql.transaction([
       sql`SELECT pg_advisory_xact_lock(${eventId})`,
       sql`
-        INSERT INTO registrations (event_id, name, email, phone, attendees, notes)
-        SELECT e.id, ${name}, ${email}, ${phone}, ${attendees}, ${notes}
+        INSERT INTO registrations (event_id, name, email, phone, attendees, notes, marketing_opt_in)
+        SELECT e.id, ${name}, ${email}, ${phone}, ${attendees}, ${notes}, ${marketing}
         FROM events e
         WHERE e.id = ${eventId}
           AND e.published AND e.registration_open
@@ -71,6 +72,15 @@ export const POST: APIRoute = async ({ request }) => {
       if (!ev.registration_open) return json({ ok: false, error: 'Las inscripciones de este evento están cerradas.' }, 409);
       const left = Math.max(0, ev.capacity - ev.taken);
       return json({ ok: false, error: left === 0 ? 'Lo sentimos, el evento está completo.' : `Solo quedan ${left} plazas.` }, 409);
+    }
+
+    // Si marco la casilla, queda suscrito a los avisos de proximos eventos (consentimiento explicito).
+    if (marketing) {
+      await sql`
+        INSERT INTO subscribers (email, name, status, source, consent_at)
+        VALUES (${email}, ${name}, 'active', 'inscripcion', now())
+        ON CONFLICT (email) DO UPDATE SET status = 'active', consent_at = now(), unsubscribed_at = NULL,
+          name = CASE WHEN subscribers.name = '' THEN EXCLUDED.name ELSE subscribers.name END`;
     }
 
     // Correos (opcionales): confirmación a la persona y aviso al equipo.

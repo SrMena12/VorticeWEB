@@ -8,3 +8,6 @@ dist/
 # vercel
 .env*.local
 .env*
+
+# scripts temporales de prueba
+scripts/_*

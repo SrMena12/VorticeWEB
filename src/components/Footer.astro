@@ -1,4 +1,5 @@
 ---
+import NewsletterForm from './NewsletterForm.astro';
 import { SITE, SERVICES } from '../data/site';
 const year = new Date().getFullYear();
 ---
@@ -37,6 +38,10 @@ const year = new Date().getFullYear();
           <li><a class="hover:text-fg" href={SITE.facebook} rel="noopener">Facebook</a></li>
         </ul>
       </nav>
+    </div>
+    <div class="mt-14 grid gap-4 md:grid-cols-2 md:items-center">
+      <div><p class="font-display text-2xl">No te pierdas el próximo evento</p><p class="mt-1 text-mute">Te avisamos cuando abramos inscripciones. Sin spam.</p></div>
+      <NewsletterForm dark />
     </div>
     <p class="mt-16 border-t border-white/10 py-6 text-center text-sm text-mute">© {year} Vórtice Eventos · Toledo · <a class="hover:text-fg underline" href="/privacidad">Privacidad</a></p>
   </div>

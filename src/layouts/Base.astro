@@ -8,6 +8,8 @@ interface Props { title: string; description: string; schema?: object[]; theme?:
 const { title, description, schema = [], theme, image = '/og.png', ogType = 'website', noindex = false } = Astro.props;
 const canonical = new URL(Astro.url.pathname, SITE.url).href;
 const ogImage = new URL(image, SITE.url).href;
+const isStaging = Astro.url.hostname.endsWith('.vercel.app');
+const gsc = process.env.GSC_VERIFICATION || '';
 
 const website = {
   '@context': 'https://schema.org',
@@ -55,7 +57,9 @@ const business = {
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     <meta name="theme-color" content={'#ffffff'} />
-    <meta name="robots" content={noindex ? 'noindex,follow' : 'index,follow,max-image-preview:large'} />
+    <meta name="robots" content={noindex || isStaging ? 'noindex,follow' : 'index,follow,max-image-preview:large'} />
+    {gsc && <meta name="google-site-verification" content={gsc} />}
+    <link rel="alternate" type="application/rss+xml" title="Blog de Vórtice Eventos" href="/rss.xml" />
     <meta name="geo.region" content="ES-CM" />
     <meta name="geo.placename" content="Toledo" />
     <meta property="og:type" content={ogType} />
@@ -95,6 +99,16 @@ const business = {
         <a href={SITE.whatsapp} class="btn btn-primary !py-3 text-sm">WhatsApp</a>
       </div>
     </div>
+    <script is:inline>
+      // Visitas sin cookies ni datos personales (ver /api/v)
+      (function () {
+        try {
+          if (navigator.doNotTrack === '1' || location.pathname.indexOf('/admin') === 0) return;
+          var d = JSON.stringify({ p: location.pathname, r: document.referrer, u: location.search });
+          if (navigator.sendBeacon) navigator.sendBeacon('/api/v', d); else fetch('/api/v', { method: 'POST', body: d, keepalive: true });
+        } catch (e) {}
+      })();
+    </script>
     <script is:inline>
       (function () {
         var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;

@@ -8,6 +8,14 @@ export const onRequest = defineMiddleware(async (ctx, next) => {
   const path = ctx.url.pathname.replace(/\/$/, '') || '/';
   const inAdmin = path === '/admin' || path.startsWith('/admin/') || path.startsWith('/api/admin');
 
+  if (inAdmin && ctx.request.method !== 'GET' && ctx.request.method !== 'HEAD') {
+    // Protección CSRF del panel: las escrituras solo se aceptan desde nuestra propia web.
+    const origin = ctx.request.headers.get('origin');
+    let ok = false;
+    try { ok = Boolean(origin) && new URL(origin).host === ctx.url.host; } catch { ok = false; }
+    if (!ok) return new Response('Origen no permitido', { status: 403 });
+  }
+
   if (inAdmin) {
     const adminId = readSession(ctx.cookies.get(COOKIE)?.value);
     (ctx.locals as any).adminId = adminId;

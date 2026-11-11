@@ -7,6 +7,9 @@ const path = Astro.url.pathname.replace(/\/$/, '');
 const nav = [
   { href: '/admin', label: 'Resumen' },
   { href: '/admin/eventos', label: 'Eventos' },
+  { href: '/admin/correos', label: 'Correos' },
+  { href: '/admin/suscriptores', label: 'Suscriptores' },
+  { href: '/admin/estadisticas', label: 'Estadísticas' },
   { href: '/admin/blog', label: 'Blog' },
 ];
 const active = (h: string) => (h === '/admin' ? path === '/admin' : path.startsWith(h));
