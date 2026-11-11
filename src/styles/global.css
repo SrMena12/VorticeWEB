@@ -136,3 +136,6 @@ footer em { color: #7fd3ff; }
   .rise { animation: none; }
   html { scroll-behavior: auto; }
 }
+
+/* Los formularios en cuadrícula nunca se ensanchan más que su contenedor (móviles muy estrechos) */
+form.glass.grid { grid-template-columns: minmax(0, 1fr); }
