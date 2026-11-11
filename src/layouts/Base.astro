@@ -136,19 +136,6 @@ const business = {
 
         if (reduce || !fine) return;
 
-        // magnetic buttons
-        document.querySelectorAll('.mag').forEach(function (b) {
-          b.addEventListener('pointermove', function (e) { var r = b.getBoundingClientRect(); b.style.transform = 'translate(' + ((e.clientX - r.left - r.width / 2) * 0.22) + 'px,' + ((e.clientY - r.top - r.height / 2) * 0.3) + 'px)'; });
-          b.addEventListener('pointerleave', function () { b.style.transform = ''; });
-        });
-
-        // hero parallax
-        var hero = document.querySelector('[data-hero]');
-        if (hero) hero.addEventListener('pointermove', function (e) {
-          var r = hero.getBoundingClientRect();
-          hero.style.setProperty('--px', ((e.clientX - r.left) / r.width - 0.5) * 2);
-          hero.style.setProperty('--py', ((e.clientY - r.top) / r.height - 0.5) * 2);
-        });
       })();
     </script>
   </body>

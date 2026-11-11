@@ -88,9 +88,9 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 footer .outline { -webkit-text-stroke: 1.5px rgba(255,255,255,.55); }
 
 /* tarjetas flotantes del hero */
-.float-card { transform: translate3d(calc(var(--px, 0) * var(--d, 10) * 1px), calc(var(--py, 0) * var(--d, 10) * 1px), 0) rotate(var(--r, 0deg)); transition: transform .25s ease-out; }
-@keyframes bob { 0%,100% { translate: 0 0; } 50% { translate: 0 -12px; } }
-.bob { animation: bob 6s ease-in-out infinite; }
+.float-card { transform: rotate(var(--r, 0deg)); }
+.float-card .shot { transition: transform .35s ease, box-shadow .35s ease; }
+.float-card:hover .shot { transform: translateY(-4px) scale(1.02); }
 
 /* palabra rotatoria */
 #rot { display: inline-block; color: var(--pt); transition: opacity .35s ease, transform .35s ease; }
@@ -122,7 +122,7 @@ footer .aurora { display: none; }
 footer em { color: #7fd3ff; }
 
 @media (prefers-reduced-motion: reduce) {
-  .blob, .marquee, .bob { animation: none; }
+  .blob, .marquee { animation: none; }
   .reveal { opacity: 1; transform: none; transition: none; }
   html { scroll-behavior: auto; }
 }
