@@ -6,7 +6,7 @@ import { SITE } from '../data/site';
 const mapQ = encodeURIComponent(`${SITE.street}, ${SITE.postal} ${SITE.city}, España`);
 
 const channels = [
-  { t: 'Llámanos', v: SITE.phone, h: SITE.phoneHref, cls: 'bg-[#0a9ddb] text-white', sh: '#076f9a',
+  { t: 'Llámanos', v: SITE.phone, h: SITE.phoneHref, cls: 'bg-[#0a7bb0] text-white', sh: '#076f9a',
     icon: 'M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z' },
   { t: 'WhatsApp', v: 'Escríbenos ahora', h: SITE.whatsapp, cls: 'bg-[#ffc933] text-[#0d2f4a]', sh: '#d99e00',
     icon: 'M12 3a9 9 0 0 0-7.8 13.5L3 21l4.7-1.2A9 9 0 1 0 12 3zm4.6 12.4c-.2.6-1.2 1.1-1.7 1.2-.5.1-1 .1-3.2-.8a10.9 10.9 0 0 1-4.1-3.6c-.7-1-1.2-2-1.2-3s.5-1.5.7-1.7c.2-.2.4-.3.6-.3h.4c.1 0 .3 0 .5.4l.7 1.7c.1.2.1.3 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.4.7 1 1.4 1.7 1.9.7.5 1.3.8 1.6.9.3.1.5.1.6-.1l.8-.9c.2-.2.4-.2.6-.1l1.7.8c.2.1.4.2.4.3.1.2.1.7-.1 1.3z' },
@@ -43,7 +43,7 @@ const steps = [
           <a href={c.h} rel="noopener" class={`group block rounded-[1.75rem] p-5 md:p-7 h-full transition-transform hover:translate-y-[3px] ${c.cls}`} style={`box-shadow:0 10px 0 -3px ${c.sh}`}>
             <svg viewBox="0 0 24 24" class="size-9 md:size-11" fill="currentColor" aria-hidden="true"><path d={c.icon} /></svg>
             <span class="mt-4 block font-display text-2xl md:text-3xl">{c.t}</span>
-            <span class="mt-1 block text-sm md:text-base font-semibold opacity-90 break-words">{c.v}</span>
+            <span class="mt-1 block text-sm md:text-base font-semibold break-words">{c.v}</span>
           </a>
         </li>
       ))}

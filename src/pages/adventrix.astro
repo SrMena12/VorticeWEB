@@ -10,13 +10,13 @@ const acts = ['Multiaventura y tirolinas', 'Jungle Park', 'Ninja Warrior', 'Tiro
 const cumples = ['Cumple Aventura', 'Cumple Aventura Plus', 'Cumple Veraniego', 'Cumple Veraniego Infantil'];
 const zonas = ['Albergue', 'Hospedería', 'Residencia', 'Cabañas de madera'];
 const quick = [
-  { t: 'Actividades', d: 'Todas las actividades del parque', h: `${A}/actividades`, c: '#0a9ddb' },
+  { t: 'Actividades', d: 'Todas las actividades del parque', h: `${A}/actividades`, c: '#0a7bb0' },
   { t: 'Colegios', d: 'Visitas de día y estancias', h: `${A}/colegios`, c: '#e0457b' },
-  { t: 'Cumpleaños', d: 'Elige el cumple ideal', h: `${A}/cumples-y-celebraciones`, c: '#0a9ddb' },
+  { t: 'Cumpleaños', d: 'Elige el cumple ideal', h: `${A}/cumples-y-celebraciones`, c: '#0a7bb0' },
   { t: 'Alojamiento', d: 'Ven y quédate', h: `${A}/alojamiento`, c: '#e0457b' },
-  { t: 'Disponibilidad', d: 'Consulta fechas libres', h: `${A}/disponibilidadaventura`, c: '#0a9ddb' },
+  { t: 'Disponibilidad', d: 'Consulta fechas libres', h: `${A}/disponibilidadaventura`, c: '#0a7bb0' },
   { t: 'Solicitar presupuesto', d: 'Para colegios y grupos', h: `${A}/solicitar-presupuesto`, c: '#e0457b' },
-  { t: 'Inscripción', d: 'Inscribe a tu participante', h: `${A}/inscripcion`, c: '#0a9ddb' },
+  { t: 'Inscripción', d: 'Inscribe a tu participante', h: `${A}/inscripcion`, c: '#0a7bb0' },
   { t: 'Mi Adventrix', d: 'Área privada', h: `${A}/area-privada`, c: '#e0457b' },
 ];
 const faqs = [
@@ -41,7 +41,7 @@ const schema = [{
       <Pic src="/img/adv-cumple.webp" alt="Niños en el parque de cuerdas de Adventrix en Toledo" class="absolute inset-0 size-full object-cover" width="1400" height="788" fetchpriority="high" />
       <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/45"></div>
       <div class="relative px-5 py-20">
-        <h1 class="text-[clamp(3.5rem,12vw,9rem)] leading-none uppercase" style="color:#0a9ddb;-webkit-text-stroke:3px #fff;paint-order:stroke fill;text-shadow:0 8px 30px rgba(0,0,0,.35)">Adventrix</h1>
+        <h1 class="text-[clamp(3.5rem,12vw,9rem)] leading-none uppercase" style="color:#0a7bb0;-webkit-text-stroke:3px #fff;paint-order:stroke fill;text-shadow:0 8px 30px rgba(0,0,0,.35)">Adventrix</h1>
         <p class="mt-4 text-2xl md:text-3xl font-semibold text-white" style="font-family:'Fredoka',sans-serif;text-shadow:0 3px 14px rgba(0,0,0,.55)">Tu parque de ocio al aire libre</p>
         <div class="mt-9 flex flex-wrap justify-center gap-3">
           <a href={A} rel="noopener" class="btn btn-primary text-lg">Ir a adventrix.es ↗</a>
@@ -55,7 +55,7 @@ const schema = [{
   <!-- Qué hace Vórtice -->
   <section id="info" class="mx-auto max-w-6xl px-5 pt-20 scroll-mt-24 grid gap-10 md:grid-cols-5 items-center">
     <div class="md:col-span-3">
-      <p class="reveal font-bold text-[#0a9ddb] tracking-widest uppercase text-sm">Colaboramos con Adventrix</p>
+      <p class="reveal font-bold text-[#0a77a8] tracking-widest uppercase text-sm">Colaboramos con Adventrix</p>
       <h2 class="reveal mt-2 text-4xl md:text-6xl" style="--delay:80ms">Los monitores y los grupos, <em>de nuestra mano.</em></h2>
       <p class="reveal mt-5 text-lg text-mute" style="--delay:140ms">Adventrix es un parque de aventura y ocio en Toledo, «de toda la vida pero con actividades innovadoras». Desde Vórtice ponemos el equipo de monitores y gestionamos los grupos para que cada visita salga redonda.</p>
       <ul class="reveal mt-6 grid gap-3 font-semibold" style="--delay:200ms">
@@ -73,9 +73,9 @@ const schema = [{
   <section class="mx-auto max-w-6xl px-5 pt-24">
     <h2 class="reveal text-4xl md:text-5xl">Qué se hace en <em>Adventrix</em></h2>
     <ul class="reveal mt-8 flex flex-wrap gap-2.5 font-semibold">
-      {acts.map((a, i) => <li class={`rounded-full px-5 py-2.5 text-white ${i % 2 ? 'bg-[#ff89ae]' : 'bg-[#0a9ddb]'}`}>{a}</li>)}
+      {acts.map((a, i) => <li class={`rounded-full px-5 py-2.5 ${i % 2 ? 'bg-[#ff89ae] text-[#0d2f4a]' : 'bg-[#0a7bb0] text-white'}`}>{a}</li>)}
     </ul>
-    <p class="mt-6"><a class="font-bold text-[#0a9ddb] underline underline-offset-4" href={`${A}/actividades`} rel="noopener">Ver todas las actividades con sus fichas en adventrix.es ↗</a></p>
+    <p class="mt-6"><a class="font-bold text-[#0a77a8] underline underline-offset-4" href={`${A}/actividades`} rel="noopener">Ver todas las actividades con sus fichas en adventrix.es ↗</a></p>
   </section>
 
   <!-- Colegios + Cumpleaños + Alojamiento -->
@@ -123,13 +123,13 @@ const schema = [{
 
   <!-- Contacto Adventrix -->
   <section class="mx-auto max-w-6xl px-5 pt-24">
-    <div class="reveal rounded-[2rem] p-8 md:p-12 text-white grid gap-8 md:grid-cols-2" style="background:#0a9ddb; border-bottom:14px solid #ff89ae">
+    <div class="reveal rounded-[2rem] p-8 md:p-12 text-white grid gap-8 md:grid-cols-2" style="background:#0a7bb0; border-bottom:14px solid #ff89ae">
       <div>
         <h2 class="text-4xl md:text-5xl">Contacto de Adventrix</h2>
         <p class="mt-4 text-white/90">Paseo Pozuela 31, 45004 Toledo</p>
         <p class="mt-2 text-white/90">Atención telefónica: L–V de 9:00 a 19:00</p>
         <div class="mt-6 flex flex-wrap gap-3">
-          <a href={tel} class="btn bg-white text-[#0a9ddb]">925 63 43 25</a>
+          <a href={tel} class="btn bg-white text-[#0a77a8]">925 63 43 25</a>
           <a href="mailto:hola@adventrix.es" class="btn bg-[#ff89ae] text-white">hola@adventrix.es</a>
         </div>
       </div>
@@ -140,7 +140,7 @@ const schema = [{
         <dt class="font-bold">Domingos</dt><dd>10–21 h</dd>
       </dl>
     </div>
-    <p class="mt-5 text-sm text-mute">¿Necesitas monitores o ayuda con la gestión de un grupo? <a class="font-bold text-[#0a9ddb] underline" href="/contacto">Habla con Vórtice</a>.</p>
+    <p class="mt-5 text-sm text-mute">¿Necesitas monitores o ayuda con la gestión de un grupo? <a class="font-bold text-[#0a77a8] underline" href="/contacto">Habla con Vórtice</a>.</p>
   </section>
 
   <section class="mx-auto max-w-3xl px-5 pt-24">
