@@ -36,7 +36,7 @@ export const POST: APIRoute = async ({ request }) => {
     return json({ ok: false, error: 'Debes aceptar la política de privacidad.' }, 400);
   }
 
-  if (await tooMany(`reg:${clientIp(request)}`, 8, 60)) {
+  if (await tooMany(`reg:${clientIp(request)}`, 20, 60)) {
     return json({ ok: false, error: 'Demasiados intentos. Inténtalo de nuevo en un rato.' }, 429);
   }
 
