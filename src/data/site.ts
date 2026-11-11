@@ -27,13 +27,13 @@ export type Service = {
 };
 
 export const ACCENT: Record<string, [string, string]> = {
-  'team-building-toledo': ['#0a9ddb', '#2f6fe0'],
+  'team-building-toledo': ['#0a7bb0', '#2f6fe0'],
   'fiestas-de-empresa-toledo': ['#e08a00', '#ffc933'],
   'formacion-empresas-toledo': ['#0f9f93', '#3ee0d0'],
   'despedidas-de-soltero-toledo': ['#e0523f', '#ff8a6b'],
-  'celebraciones-toledo': ['#2f6fe0', '#0a9ddb'],
-  'fiestas-tematicas-toledo': ['#0a9ddb', '#0f9f93'],
-  'escape-y-justas-medievales-ayuntamientos': ['#0f9f93', '#0a9ddb'],
+  'celebraciones-toledo': ['#2f6fe0', '#0a7bb0'],
+  'fiestas-tematicas-toledo': ['#0a7bb0', '#0f9f93'],
+  'escape-y-justas-medievales-ayuntamientos': ['#0f9f93', '#0a7bb0'],
 };
 
 export const GROUPS = {

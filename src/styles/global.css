@@ -30,7 +30,7 @@
 
 /* ===== Tema Adventrix (cian + rosa de su web) ===== */
 [data-theme="adv"] {
-  --acc: #ff89ae; --accd: #d9577f; --accl: #ffc4d6; --acc-on: #ffffff; --sky: #cdeaf8;
+  --acc: #ff89ae; --accd: #d9577f; --accl: #ffc4d6; --acc-on: #0d2f4a; --sky: #cdeaf8;
 }
 
 html { scroll-behavior: smooth; background: #fff; }
