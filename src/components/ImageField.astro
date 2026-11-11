@@ -10,7 +10,7 @@ const { name, value = '', label } = Astro.props;
       <img data-preview src={value || ''} alt="" class={`size-full object-cover ${value ? '' : 'hidden'}`} />
       <span data-empty class={value ? 'hidden' : ''}>Sin foto</span>
     </div>
-    <div class="grid gap-2 grow min-w-[16rem]">
+    <div class="grid gap-2 grow basis-[16rem] min-w-0">
       <input class="field" name={name} value={value ?? ''} placeholder="https://… o sube una foto" data-url />
       <div class="flex flex-wrap items-center gap-3">
         <label class="btn btn-dark !py-2 !px-4 text-sm cursor-pointer">
