@@ -1,0 +1,42 @@
+---
+import { SITE, SERVICES } from '../data/site';
+const year = new Date().getFullYear();
+---
+<footer class="relative mt-32 overflow-hidden border-t border-white/10 pb-24 md:pb-0">
+  <div class="aurora !top-auto !bottom-0 !h-full opacity-60" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span></div>
+  <div class="relative z-10 mx-auto max-w-6xl px-5 pt-20">
+    <div class="flex items-end gap-4 md:gap-8">
+      <img src="/img/logo-vortice.png" alt="" width="256" height="224" class="h-[clamp(4rem,14vw,11rem)] w-auto drop-shadow-[0_0_30px_rgba(25,181,255,.5)]" loading="lazy" />
+      <p class="font-display text-[clamp(4rem,17vw,14rem)] leading-[0.85] outline select-none" aria-hidden="true">Vórtice</p>
+    </div>
+    <div class="mt-14 grid gap-10 md:grid-cols-4">
+      <div class="md:col-span-2">
+        <p class="font-display text-3xl">Eventos a medida <em>en Toledo</em></p>
+        <p class="mt-4 text-mute max-w-sm">Empresas, ayuntamientos y celebraciones privadas. Cuidamos hasta el último detalle.</p>
+        <address class="mt-6 not-italic text-mute leading-relaxed">
+          {SITE.street}, {SITE.postal} {SITE.city}<br />
+          <a class="text-fg hover:text-[#7fd3ff]" href={SITE.phoneHref}>{SITE.phone}</a><br />
+          <a class="text-fg hover:text-[#7fd3ff]" href={`mailto:${SITE.email}`}>{SITE.email}</a>
+        </address>
+      </div>
+      <nav aria-label="Servicios">
+        <p class="font-bold text-[#7fd3ff] mb-3">Servicios</p>
+        <ul class="space-y-2 text-mute">
+          {SERVICES.map((s) => <li><a class="hover:text-fg" href={`/servicios/${s.slug}`}>{s.title}</a></li>)}
+        </ul>
+      </nav>
+      <nav aria-label="Más">
+        <p class="font-bold text-[#7fd3ff] mb-3">Más</p>
+        <ul class="space-y-2 text-mute">
+          <li><a class="hover:text-fg" href="/adventrix">Adventrix</a></li>
+          <li><a class="hover:text-fg" href="/nosotros">Nosotros</a></li>
+          <li><a class="hover:text-fg" href="/blog">Blog</a></li>
+          <li><a class="hover:text-fg" href="/contacto">Contacto</a></li>
+          <li><a class="hover:text-fg" href={SITE.instagram} rel="noopener">Instagram</a></li>
+          <li><a class="hover:text-fg" href={SITE.facebook} rel="noopener">Facebook</a></li>
+        </ul>
+      </nav>
+    </div>
+    <p class="mt-16 border-t border-white/10 py-6 text-center text-sm text-mute">© {year} Vórtice Eventos · Toledo</p>
+  </div>
+</footer>

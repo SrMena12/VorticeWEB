@@ -1,0 +1,126 @@
+---
+import Base from '../../layouts/Base.astro';
+import ContactForm from '../../components/ContactForm.astro';
+import CtaBand from '../../components/CtaBand.astro';
+import { SERVICES, SITE, ACCENT, GROUPS, PHOTO } from '../../data/site';
+import { EXTRA, AREAS } from '../../data/seo';
+import { POSTS } from '../../data/blog';
+
+export function getStaticPaths() {
+  return SERVICES.map((s) => ({ params: { slug: s.slug }, props: { s } }));
+}
+const { s } = Astro.props;
+const [a, b] = ACCENT[s.slug];
+const ex = EXTRA[s.slug];
+const tipos: Record<string, string> = {
+  'team-building-toledo': 'Team building', 'fiestas-de-empresa-toledo': 'Fiesta de empresa', 'formacion-empresas-toledo': 'Formación',
+  'despedidas-de-soltero-toledo': 'Despedida', 'celebraciones-toledo': 'Celebración privada', 'fiestas-tematicas-toledo': 'Fiesta temática',
+  'escape-y-justas-medievales-ayuntamientos': 'Evento para ayuntamiento',
+};
+const tipo = tipos[s.slug];
+const photo = PHOTO[s.slug];
+const post = POSTS.find((p) => p.service === s.slug);
+const others = SERVICES.filter((x) => x.slug !== s.slug && x.group === s.group).concat(SERVICES.filter((x) => x.slug !== s.slug && x.group !== s.group)).slice(0, 3);
+const url = `${SITE.url}/servicios/${s.slug}`;
+const schema = [
+  {
+    '@context': 'https://schema.org', '@type': 'Service', name: s.h1, description: s.metaDesc, url,
+    serviceType: s.title, inLanguage: 'es-ES',
+    provider: { '@id': `${SITE.url}/#empresa` },
+    areaServed: [{ '@type': 'City', name: 'Toledo' }, { '@type': 'AdministrativeArea', name: 'Provincia de Toledo' }],
+    availableChannel: { '@type': 'ServiceChannel', serviceUrl: `${SITE.url}/contacto`, servicePhone: '+34696035857' },
+  },
+  {
+    '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Inicio', item: SITE.url },
+      { '@type': 'ListItem', position: 2, name: 'Servicios', item: `${SITE.url}/#servicios` },
+      { '@type': 'ListItem', position: 3, name: s.title, item: url },
+    ],
+  },
+  {
+    '@context': 'https://schema.org', '@type': 'FAQPage',
+    mainEntity: ex.faqs.map(([q, an]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: an } })),
+  },
+];
+---
+<Base title={s.metaTitle} description={s.metaDesc} schema={schema}>
+  <section class="relative overflow-hidden pt-40 pb-20" style={`--a:${a}; --b:${b}`}>
+    <div class="aurora" aria-hidden="true">
+      <span class="blob b1"></span><span class="blob b2"></span>
+    </div>
+    <div class="relative z-10 mx-auto max-w-6xl px-5">
+      <nav aria-label="Migas" class="reveal text-sm font-semibold text-mute"><a class="hover:text-fg" href="/">Inicio</a> / <a class="hover:text-fg" href="/#servicios">Servicios</a> / <span class="text-fg">{s.title}</span></nav>
+      <p class="reveal mt-6 text-sm font-extrabold tracking-[0.2em] uppercase" style={`color:${a}; --delay:60ms`}>{GROUPS[s.group].label} · Toledo</p>
+      <h1 class="reveal mt-3 text-[clamp(2.6rem,6.4vw,5.6rem)] max-w-4xl leading-[0.98]" style="--delay:120ms">{s.h1}</h1>
+      <p class="reveal mt-6 text-xl text-mute max-w-2xl" style="--delay:200ms">{s.intro}</p>
+      <div class="reveal mt-9 flex flex-wrap gap-3" style="--delay:280ms">
+        <a href="#presupuesto" class="btn btn-primary text-lg">Pedir presupuesto gratis →</a>
+        <a href={SITE.whatsapp} class="btn btn-ghost text-lg">WhatsApp</a>
+        <a href={SITE.phoneHref} class="btn btn-white text-lg">Llamar {SITE.phone}</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-5 pt-8 grid gap-10 lg:grid-cols-2 items-center">
+    <div>
+      <h2 class="reveal text-4xl md:text-5xl">Qué <em>incluye</em></h2>
+      <ul class="mt-8 grid gap-3">
+        {s.points.map((p, i) => (
+          <li class="spot reveal p-5 flex gap-4 items-center font-semibold" style={`--a:${a}; --delay:${i * 80}ms`}>
+            <span class="grid place-items-center size-9 shrink-0 rounded-full text-white text-sm" style={`background:linear-gradient(135deg,${a},${b})`}>✓</span>{p}
+          </li>
+        ))}
+      </ul>
+    </div>
+    <div class="reveal shot aspect-[4/3]" style={`--a:${a}; --b:${b}`}>
+      <img src={photo.src} alt={photo.alt} width="1400" height="933" loading="lazy" decoding="async" style={photo.pos ? `object-position:${photo.pos}` : undefined} />
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-5 pt-24 grid gap-6 lg:grid-cols-2">
+    <div class="spot reveal p-8" style={`--a:${a}`}>
+      <h2 class="text-3xl md:text-4xl">¿Para quién es?</h2>
+      <ul class="mt-5 grid gap-3">{ex.who.map((w) => <li class="flex gap-3"><span style={`color:${a}`} class="font-extrabold">✦</span>{w}</li>)}</ul>
+    </div>
+    <div class="spot reveal p-8" style={`--a:${a}; --delay:100ms`}>
+      <h2 class="text-3xl md:text-4xl">Cómo lo hacemos</h2>
+      <ol class="mt-5 grid gap-3">{ex.how.map((h, i) => <li class="flex gap-3"><span class="grid place-items-center size-7 shrink-0 rounded-full text-white text-sm font-bold" style={`background:${a}`}>{i + 1}</span>{h}</li>)}</ol>
+    </div>
+  </section>
+
+  <section id="presupuesto" class="mx-auto max-w-3xl px-5 pt-24 scroll-mt-28">
+    <h2 class="reveal text-4xl md:text-5xl mb-3">Pide tu presupuesto de <em>{s.title.toLowerCase()}</em></h2>
+    <p class="reveal text-mute mb-8">Respuesta en menos de 24 h y sin compromiso.</p>
+    <div class="reveal"><ContactForm /></div>
+  </section>
+
+  <section class="mx-auto max-w-3xl px-5 pt-24">
+    <h2 class="reveal text-4xl md:text-5xl">Preguntas <em>frecuentes</em></h2>
+    <div class="mt-8 grid gap-3">
+      {ex.faqs.map(([q, an], i) => (
+        <details class="reveal glass rounded-2xl p-5 md:p-6" style={`--delay:${i * 60}ms`}>
+          <summary class="font-bold cursor-pointer flex justify-between gap-4 items-center">{q}<span class="plus text-2xl text-[color:var(--p)] transition-transform">+</span></summary>
+          <p class="mt-3 text-mute">{an}</p>
+        </details>
+      ))}
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-5 pt-24">
+    <p class="reveal text-mute"><strong class="text-fg">Zona de servicio:</strong> {AREAS.join(' · ')} y toda la provincia de Toledo.</p>
+    {post && <p class="reveal mt-3"><a class="font-bold text-[color:var(--pt)] underline underline-offset-4" href={`/blog/${post.slug}`}>Lee: {post.title} →</a></p>}
+  </section>
+
+  <CtaBand title={`¿Hablamos de tu ${s.title.toLowerCase()}?`} tipo={tipo} />
+
+  <section class="mx-auto max-w-6xl px-5 pt-24">
+    <h2 class="text-3xl md:text-4xl">Otros eventos en <em>Toledo</em></h2>
+    <div class="mt-8 grid gap-4 sm:grid-cols-3">
+      {others.map((o) => {
+        const [oa] = ACCENT[o.slug];
+        return <a href={`/servicios/${o.slug}`} class="spot p-6 min-h-40 flex flex-col" style={`--a:${oa}`}><h3 class="text-2xl">{o.title}</h3><span class="mt-auto pt-4 font-bold" style={`color:${oa}`}>Ver →</span></a>;
+      })}
+    </div>
+  </section>
+</Base>

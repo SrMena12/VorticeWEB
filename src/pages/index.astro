@@ -1,0 +1,235 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE, SERVICES, GROUPS, ACCENT, PHOTO } from '../data/site';
+import { AREAS } from '../data/seo';
+import { POSTS } from '../data/blog';
+import CtaBand from '../components/CtaBand.astro';
+
+const faqs = [
+  { q: '¿Cuánto cuesta organizar un evento con Vórtice?', a: 'Depende del tipo de evento, el número de personas y el espacio. Preparamos un presupuesto a medida y sin compromiso, normalmente en menos de 24 horas.' },
+  { q: '¿Organizáis eventos de empresa en Toledo?', a: 'Sí. Team building, fiestas de empresa y formación en habilidades, en tus instalaciones o en espacios privilegiados de Toledo y provincia.' },
+  { q: '¿Trabajáis con ayuntamientos?', a: 'Sí: escape urbano con la historia de la localidad, justas medievales y dinamización de clubes de lectura.' },
+  { q: '¿Qué es Adventrix y qué relación tiene con Vórtice?', a: 'Adventrix es un parque de ocio y aventura en Toledo. Vórtice colabora con ellos aportando monitores y gestionando los grupos de colegios y celebraciones.' },
+  { q: '¿Podéis organizar una despedida de soltero o soltera en Toledo?', a: 'Claro. Actividades, barra libre, comida y aperitivos, con todo organizado para que solo disfrutéis.' },
+];
+const faqSchema = {
+  '@context': 'https://schema.org', '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+};
+const marquee = ['Team building', 'Despedidas', 'Fiestas de empresa', 'Escape urbano', 'Justas medievales', 'Fiestas temáticas', 'Formación', 'Celebraciones'];
+const words = ['empresas', 'despedidas', 'celebraciones', 'ayuntamientos', 'equipos'];
+const steps = [
+  ['01', 'Cuéntanos', 'Qué quieres celebrar, cuántos sois y cuándo. Por teléfono, WhatsApp o formulario.'],
+  ['02', 'Lo diseñamos', 'Propuesta y presupuesto a medida, sin compromiso, en menos de 24 horas.'],
+  ['03', 'Tú disfrutas', 'Montamos, animamos y recogemos. Cuidamos hasta el último detalle.'],
+];
+---
+<Base
+  title="Eventos en Toledo: empresas, despedidas y fiestas | Vórtice"
+  description="Agencia de eventos en Toledo: team building, fiestas de empresa, despedidas, celebraciones y ayuntamientos. Todo incluido. Presupuesto gratis."
+  schema={[faqSchema]}
+>
+  <!-- HERO -->
+  <section data-hero class="relative min-h-[100svh] flex items-center overflow-hidden pt-28 pb-20">
+    <div class="aurora" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span></div>
+    <div class="relative z-10 mx-auto max-w-6xl px-5 w-full grid lg:grid-cols-12 gap-12 items-center">
+      <div class="lg:col-span-7">
+        <p class="reveal inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 text-sm font-semibold">
+          <span class="size-2 rounded-full bg-[color:var(--acc)]"></span> Agencia de eventos en Toledo
+        </p>
+        <h1 class="reveal mt-6 text-[clamp(3rem,6.6vw,6rem)] leading-[0.95]" style="--delay:100ms">
+          Eventos en Toledo que <em>nadie olvida.</em>
+        </h1>
+        <p class="reveal mt-7 text-lg md:text-xl text-mute max-w-xl" style="--delay:200ms">
+          Lo organizamos todo para <strong class="text-fg"><span id="rot">{words[0]}</span></strong>. Tú solo disfrutas.
+        </p>
+        <div class="reveal mt-9 flex flex-wrap gap-3" style="--delay:300ms">
+          <a href="/contacto" class="btn btn-primary mag text-lg">Pide presupuesto gratis →</a>
+          <a href={SITE.whatsapp} class="btn btn-ghost text-lg">WhatsApp</a>
+        </div>
+        <ul class="reveal mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-mute" style="--delay:400ms">
+          <li><span class="text-[color:var(--pt)]">✦</span> Todo incluido</li>
+          <li><span class="text-[color:var(--pt)]">✦</span> Respuesta en 24 h</li>
+          <li><span class="text-[color:var(--pt)]">✦</span> Sin compromiso</li>
+        </ul>
+      </div>
+
+      <div class="lg:col-span-5 relative h-[26rem] lg:h-[34rem] hidden sm:block" aria-hidden="true">
+        <div class="float-card absolute left-[6%] top-0 w-[58%]" style="--d:18; --r:-4deg">
+          <div class="shot aspect-[3/4] bob" style="--a:#2f8cff; --b:#19b5ff"><img src="/img/serv-team-building-toledo.webp" alt="" width="1400" height="933" loading="eager" decoding="async" style="object-position:30% 50%" /><span class="absolute left-3 bottom-3 rounded-full bg-black/45 backdrop-blur px-3 py-1">Team building</span></div>
+        </div>
+        <div class="float-card absolute right-0 top-[18%] w-[48%]" style="--d:-26; --r:5deg">
+          <div class="shot aspect-square bob" style="--a:#8fdcff; --b:#19b5ff; animation-delay:-2s"><img src="/img/serv-despedidas-de-soltero-toledo.webp" alt="" width="1400" height="788" loading="eager" decoding="async" /><span class="absolute left-3 bottom-3 rounded-full bg-black/45 backdrop-blur px-3 py-1">Despedidas</span></div>
+        </div>
+        <div class="float-card absolute left-[22%] bottom-0 w-[50%]" style="--d:12; --r:2deg">
+          <div class="shot aspect-[4/3] bob" style="--a:#3ee0d0; --b:#2f8cff; animation-delay:-4s">
+            <img src="/img/evento-calle.webp" alt="" width="1600" height="693" loading="eager" decoding="async" />
+            <span class="absolute left-3 bottom-3 rounded-full bg-black/45 backdrop-blur px-3 py-1">Ayuntamientos</span>
+          </div>
+        </div>
+        <div class="float-card absolute -left-2 bottom-[28%]" style="--d:-34">
+          <div class="glass rounded-2xl px-4 py-3 font-display text-lg">100% <em>Toledo</em></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MARQUEE -->
+  <div class="band py-5 overflow-hidden" aria-hidden="true">
+    <div class="marquee font-display text-5xl md:text-7xl gap-10 whitespace-nowrap">
+      {[...marquee, ...marquee].map((m, i) => <span class={i % 2 ? 'outline' : ''}>{m} <span class="text-[color:var(--acc)]">✦</span></span>)}
+    </div>
+  </div>
+
+  <!-- SERVICIOS -->
+  <section id="servicios" class="mx-auto max-w-6xl px-5 pt-28 scroll-mt-24">
+    <p class="reveal text-[color:var(--pt)] font-bold text-sm tracking-[0.2em] uppercase">Servicios</p>
+    <h2 class="reveal mt-3 text-5xl md:text-7xl max-w-3xl" style="--delay:80ms">¿Qué quieres <em>celebrar?</em></h2>
+    <div class="reveal mt-8 flex flex-wrap gap-2" role="group" aria-label="Filtrar servicios" style="--delay:140ms">
+      <button class="chip" data-filter="all" aria-pressed="true">Todos</button>
+      {Object.entries(GROUPS).map(([k, g]) => <button class="chip" data-filter={k} aria-pressed="false">{g.label}</button>)}
+    </div>
+
+    <div id="grid" class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-6 auto-rows-fr">
+      {SERVICES.map((s, i) => {
+        const [a, b] = ACCENT[s.slug];
+        const ph = PHOTO[s.slug];
+        const big = i === 0 || i === 3;
+        return (
+          <a href={`/servicios/${s.slug}`} data-group={s.group} class={`spot reveal group flex flex-col ${big ? 'lg:col-span-4' : 'lg:col-span-2'}`} style={`--a:${a}; --b:${b}; --delay:${(i % 3) * 90}ms`}>
+            <div class="overflow-hidden h-44 md:h-52 shrink-0">
+              <img src={ph.src} alt={ph.alt} width="1400" height="933" loading="lazy" decoding="async" class="size-full object-cover transition-transform duration-700 group-hover:scale-105" style={ph.pos ? `object-position:${ph.pos}` : undefined} />
+            </div>
+            <div class="p-6 flex flex-col flex-1">
+              <span class="text-xs font-extrabold tracking-[0.18em] uppercase" style={`color:${a}`}>{GROUPS[s.group].label}</span>
+              <h3 class="mt-2 text-3xl md:text-4xl">{s.title}</h3>
+              <p class="mt-3 text-mute max-w-md">{s.short}</p>
+              <span class="mt-auto pt-5 inline-flex items-center gap-2 font-bold">Ver más <span class="grid place-items-center size-8 rounded-full text-white transition-transform group-hover:translate-x-1" style={`background:linear-gradient(135deg,${a},${b})`}>→</span></span>
+            </div>
+          </a>
+        );
+      })}
+    </div>
+    <p class="reveal mt-8 text-center"><a href="/contacto" class="btn btn-primary">¿No ves lo que buscas? Cuéntanos tu idea →</a></p>
+  </section>
+
+  <!-- ADVENTRIX -->
+  <section class="mx-auto max-w-6xl px-5 pt-28">
+    <div class="reveal relative overflow-hidden rounded-[2.5rem] text-white grid md:grid-cols-2" style="background:#0a9ddb; border-bottom:14px solid #ff89ae">
+      <div class="p-8 md:p-14 flex flex-col justify-center">
+        <img src="/img/adv-logo.png" alt="Logotipo de Adventrix" width="96" height="96" class="size-20 rounded-2xl mb-6" loading="lazy" />
+        <p class="font-bold text-sm tracking-[0.2em] uppercase text-white/85">Colaboramos con</p>
+        <h2 class="mt-2 text-6xl md:text-7xl" style="font-family:'Fredoka',sans-serif;font-weight:600;letter-spacing:-0.01em;-webkit-text-stroke:0">Adventrix</h2>
+        <p class="mt-5 text-lg max-w-md text-white/95">Tu parque de ocio al aire libre en Toledo: multiaventura, tirolinas, piscina, gymkhanas y programas para colegios. Nosotros ponemos los monitores y gestionamos los grupos.</p>
+        <div class="mt-8 flex flex-wrap gap-3">
+          <a href="/adventrix" class="btn mag bg-[#ff89ae] text-white" style="box-shadow:0 8px 0 -3px #d9577f">Descubre Adventrix →</a>
+          <a href={SITE.adventrix} rel="noopener" class="btn bg-white text-[#0a9ddb]">adventrix.es ↗</a>
+        </div>
+      </div>
+      <div class="relative min-h-72 md:min-h-full">
+        <img src="/img/adv-aerea.webp" alt="Vista aérea del parque Adventrix en Toledo" class="absolute inset-0 size-full object-cover" width="1400" height="788" loading="lazy" decoding="async" />
+      </div>
+    </div>
+  </section>
+
+  <!-- TOLEDO (SEO local) -->
+  <section class="mx-auto max-w-6xl px-5 pt-28 grid gap-10 lg:grid-cols-2 items-center">
+    <div class="reveal shot aspect-[4/3]" style="--a:#0a9ddb; --b:#19b5ff">
+      <img src="/img/toledo-alcazar.webp" alt="Vista panorámica de Toledo con el Alcázar, donde Vórtice Eventos organiza eventos" width="1400" height="927" loading="lazy" decoding="async" />
+    </div>
+    <div>
+      <p class="reveal text-[color:var(--pt)] font-bold text-sm tracking-[0.2em] uppercase">Agencia de eventos en Toledo</p>
+      <h2 class="reveal mt-3 text-4xl md:text-6xl" style="--delay:80ms">Tu agencia de eventos <em>en Toledo</em></h2>
+      <p class="reveal mt-5 text-lg text-mute" style="--delay:140ms">Somos de aquí. Organizamos eventos de empresa, despedidas, celebraciones privadas y propuestas para ayuntamientos en Toledo capital y en toda la provincia: conocemos los espacios, los proveedores y lo que funciona.</p>
+      <ul class="reveal mt-6 flex flex-wrap gap-2" style="--delay:200ms">
+        {AREAS.map((a) => <li class="glass rounded-full px-4 py-1.5 text-sm font-semibold">{a}</li>)}
+      </ul>
+      <div class="reveal mt-8 flex flex-wrap gap-3" style="--delay:260ms">
+        <a href="/contacto" class="btn btn-primary">Pedir presupuesto →</a>
+        <a href={SITE.phoneHref} class="btn btn-ghost">Llamar {SITE.phone}</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROCESO -->
+  <section class="mx-auto max-w-6xl px-5 pt-28">
+    <p class="reveal text-[color:var(--pt)] font-bold text-sm tracking-[0.2em] uppercase">Cómo trabajamos</p>
+    <h2 class="reveal mt-3 text-5xl md:text-7xl" style="--delay:80ms">Así de <em>fácil.</em></h2>
+    <ol class="mt-12 grid gap-4 md:grid-cols-3">
+      {steps.map(([n, t, d], i) => (
+        <li class="spot reveal p-8" style={`--delay:${i * 120}ms; --a:#19b5ff`}>
+          <span class="font-display text-7xl text-[color:var(--p)]">{n}</span>
+          <h3 class="mt-4 text-3xl">{t}</h3>
+          <p class="mt-3 text-mute">{d}</p>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <!-- CLIENTES -->
+  <section class="mx-auto max-w-6xl px-5 pt-28">
+    <p class="reveal text-mute font-semibold">Confían en nosotros</p>
+    <ul class="reveal mt-5 flex flex-wrap gap-3 font-semibold">
+      {['Ayuntamiento de Toledo', 'Ayuntamiento de Olías del Rey', 'Ayuntamiento de Villaseca', 'Fundación Eurocaja Rural', 'AgioGlobal'].map((c) => <li class="glass rounded-full px-5 py-2.5">{c}</li>)}
+    </ul>
+  </section>
+
+  <!-- FAQ -->
+  <section class="mx-auto max-w-3xl px-5 pt-28">
+    <h2 class="reveal text-5xl md:text-6xl">Preguntas <em>frecuentes</em></h2>
+    <div class="mt-10 grid gap-3">
+      {faqs.map((f, i) => (
+        <details class="reveal glass rounded-2xl p-5 md:p-6" style={`--delay:${i * 60}ms`}>
+          <summary class="font-bold cursor-pointer flex justify-between gap-4 items-center">{f.q}<span class="plus text-2xl text-[color:var(--p)] transition-transform">+</span></summary>
+          <p class="mt-3 text-mute">{f.a}</p>
+        </details>
+      ))}
+    </div>
+  </section>
+
+  <!-- BLOG -->
+  <section class="mx-auto max-w-6xl px-5 pt-28">
+    <div class="flex flex-wrap items-end justify-between gap-4">
+      <h2 class="reveal text-4xl md:text-5xl">Ideas para tu <em>evento</em></h2>
+      <a href="/blog" class="reveal font-bold text-[color:var(--pt)] underline underline-offset-4">Ver todos los artículos →</a>
+    </div>
+    <div class="mt-8 grid gap-4 md:grid-cols-3">
+      {POSTS.map((p, i) => (
+        <a href={`/blog/${p.slug}`} class="spot reveal p-6 flex flex-col min-h-48" style={`--delay:${i * 80}ms`}>
+          <span class="text-xs font-extrabold tracking-[0.18em] uppercase text-[color:var(--pt)]">{p.readMin} min de lectura</span>
+          <h3 class="mt-2 text-2xl">{p.title}</h3>
+          <span class="mt-auto pt-4 font-bold">Leer →</span>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <CtaBand title="Tu evento, a medida." />
+
+  <script is:inline define:vars={{ words }}>
+    // rotating word
+    (function () {
+      var el = document.getElementById('rot'); if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      var i = 0;
+      setInterval(function () {
+        el.classList.add('out');
+        setTimeout(function () { i = (i + 1) % words.length; el.textContent = words[i]; el.classList.remove('out'); }, 350);
+      }, 2400);
+    })();
+    // filter
+    (function () {
+      var chips = document.querySelectorAll('[data-filter]'), cards = document.querySelectorAll('#grid [data-group]');
+      chips.forEach(function (c) {
+        c.addEventListener('click', function () {
+          chips.forEach(function (x) { x.setAttribute('aria-pressed', String(x === c)); });
+          var f = c.dataset.filter;
+          cards.forEach(function (card) {
+            var show = f === 'all' || card.dataset.group === f;
+            card.hidden = !show;
+            if (show) { card.classList.remove('in'); void card.offsetWidth; card.classList.add('in'); }
+          });
+        });
+      });
+    })();
+  </script>
+</Base>

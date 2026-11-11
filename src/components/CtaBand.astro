@@ -1,0 +1,17 @@
+---
+import { SITE } from '../data/site';
+interface Props { title?: string; text?: string; tipo?: string; }
+const { title = 'Tu evento, a medida.', text = 'Cuéntanos tu idea y te respondemos en menos de 24 horas.', tipo } = Astro.props;
+const href = tipo ? `/contacto?tipo=${encodeURIComponent(tipo)}` : '/contacto';
+---
+<section class="mx-auto max-w-6xl px-5 pt-24">
+  <div class="reveal relative overflow-hidden rounded-[2.5rem] p-10 md:p-16 text-center text-white" style="background:var(--p); border-bottom:14px solid var(--acc)">
+    <h2 class="text-4xl md:text-7xl">{title}</h2>
+    <p class="mt-4 text-lg text-white/90 max-w-xl mx-auto">{text}</p>
+    <div class="mt-8 flex flex-wrap justify-center gap-3">
+      <a href={href} class="btn btn-ghost text-lg">Pedir presupuesto gratis →</a>
+      <a href={SITE.whatsapp} class="btn btn-white text-lg">WhatsApp</a>
+      <a href={SITE.phoneHref} class="btn btn-white text-lg">Llamar {SITE.phone}</a>
+    </div>
+  </div>
+</section>

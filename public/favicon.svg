@@ -1,6 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" fill="#070b11"/>
-  <circle cx="16" cy="16" r="14" fill="white"/>
-  <text x="50%" y="57%" dominant-baseline="middle" text-anchor="middle"
-    font-family="Georgia, serif" font-size="16" font-weight="700" fill="#2563eb">V</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#ff3d81"/><text x="32" y="44" font-size="38" font-weight="800" text-anchor="middle" fill="#fff" font-family="sans-serif">V</text></svg>

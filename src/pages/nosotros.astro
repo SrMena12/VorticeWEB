@@ -1,0 +1,31 @@
+---
+import Base from '../layouts/Base.astro';
+import CtaBand from '../components/CtaBand.astro';
+const team = [
+  { n: 'Lamri', r: 'Cofundador · Director técnico · RR.HH. y RR.PP.', d: 'Organizado, tenaz y líder en formación de equipos.', img: '/img/lamri.webp', a: '#2f8cff', b: '#1e6fe0' },
+  { n: 'Nacho Mena', r: 'Cofundador · Director creativo · Finanzas', d: 'Creatividad en estado puro.', img: '/img/nacho.webp', a: '#8fdcff', b: '#19b5ff' },
+];
+---
+<Base
+  title="Nosotros | Equipo de Vórtice Eventos en Toledo"
+  description="Conoce al equipo de Vórtice Eventos: joviales, dinámicos, atrevidos y muy profesionales. Organizamos eventos a medida en Toledo."
+>
+  <section class="relative overflow-hidden pt-40">
+    <div class="aurora" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span></div>
+    <div class="relative z-10 mx-auto max-w-6xl px-5">
+      <h1 class="reveal text-[clamp(3rem,8vw,7rem)] max-w-5xl leading-[0.95]">Joviales, dinámicos, atrevidos y <em>muy profesionales.</em></h1>
+      <p class="reveal mt-7 text-xl text-mute max-w-2xl" style="--delay:100ms">Tú lo sueñas, nosotros lo hacemos realidad. Cuidamos hasta el último detalle de cada evento.</p>
+      <div class="mt-14 grid gap-5 md:grid-cols-2">
+        {team.map((p, i) => (
+          <article class="spot reveal" style={`--a:${p.a}; --delay:${i * 120}ms`}>
+            <div class="aspect-[4/5] sm:aspect-[4/4.2] overflow-hidden">
+              <img src={p.img} alt={`${p.n}, cofundador de Vórtice Eventos`} width="900" height="1000" loading="lazy" decoding="async" class="size-full object-cover object-top transition-transform duration-700 hover:scale-105" />
+            </div>
+            <div class="p-7"><h2 class="text-4xl">{p.n}</h2><p class="mt-1 font-bold" style={`color:${p.a}`}>{p.r}</p><p class="mt-3 text-mute">{p.d}</p></div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+  <CtaBand title="¿Hablamos de tu evento?" />
+</Base>

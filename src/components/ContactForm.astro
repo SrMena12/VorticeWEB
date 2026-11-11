@@ -1,0 +1,51 @@
+---
+import { SITE } from '../data/site';
+---
+<form id="qform" class="glass rounded-[2rem] p-6 md:p-9 grid gap-4" novalidate>
+  <div class="grid gap-4 sm:grid-cols-2">
+    <label class="grid gap-1.5 text-sm font-bold">Nombre
+      <input name="nombre" required autocomplete="name" class="field font-normal" />
+    </label>
+    <label class="grid gap-1.5 text-sm font-bold">Teléfono
+      <input name="telefono" type="tel" required autocomplete="tel" class="field font-normal" />
+    </label>
+  </div>
+  <label class="grid gap-1.5 text-sm font-bold">¿Qué quieres celebrar?
+    <select name="tipo" class="field font-normal">
+      <option>Team building</option><option>Fiesta de empresa</option><option>Formación</option>
+      <option>Despedida</option><option>Celebración privada</option><option>Fiesta temática</option>
+      <option>Evento para ayuntamiento</option><option>Otro</option>
+    </select>
+  </label>
+  <div class="grid gap-4 sm:grid-cols-2">
+    <label class="grid gap-1.5 text-sm font-bold">Nº de personas (aprox.)
+      <input name="personas" inputmode="numeric" class="field font-normal" />
+    </label>
+    <label class="grid gap-1.5 text-sm font-bold">Fecha aproximada
+      <input name="fecha" class="field font-normal" />
+    </label>
+  </div>
+  <label class="grid gap-1.5 text-sm font-bold">Cuéntanos tu idea
+    <textarea name="mensaje" rows="4" class="field font-normal"></textarea>
+  </label>
+  <div class="flex flex-wrap gap-3 pt-1">
+    <button type="submit" data-via="wa" class="btn btn-primary mag">Enviar por WhatsApp</button>
+    <button type="submit" data-via="mail" class="btn btn-ghost">Enviar por email</button>
+  </div>
+  <p id="qerr" class="text-[#d9304f] text-sm font-bold" role="alert" hidden>Pon tu nombre y teléfono, por favor.</p>
+  <p class="text-sm text-mute">Respuesta en menos de 24 h. Presupuesto sin compromiso.</p>
+</form>
+<script is:inline define:vars={{ wa: SITE.whatsapp, email: SITE.email }}>
+  var f = document.getElementById('qform'), err = document.getElementById('qerr'), via = 'wa';
+  try { var t = new URLSearchParams(location.search).get('tipo'); if (t) { var s = f.querySelector('select[name=tipo]'); for (var i = 0; i < s.options.length; i++) if (s.options[i].text === t) s.selectedIndex = i; } } catch (e) {}
+  f.querySelectorAll('button[type=submit]').forEach(function (b) { b.addEventListener('click', function () { via = b.dataset.via; }); });
+  f.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var d = Object.fromEntries(new FormData(f));
+    if (!d.nombre || !d.telefono) { err.hidden = false; return; }
+    err.hidden = true;
+    var msg = 'Hola Vórtice, soy ' + d.nombre + ' (' + d.telefono + '). Quiero presupuesto para: ' + d.tipo + '. Personas: ' + (d.personas || '-') + '. Fecha: ' + (d.fecha || '-') + '. ' + (d.mensaje || '');
+    if (via === 'wa') window.open(wa + '?text=' + encodeURIComponent(msg), '_blank');
+    else location.href = 'mailto:' + email + '?subject=' + encodeURIComponent('Presupuesto evento: ' + d.tipo) + '&body=' + encodeURIComponent(msg);
+  });
+</script>

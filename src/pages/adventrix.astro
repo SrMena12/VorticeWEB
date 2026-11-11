@@ -1,0 +1,151 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE } from '../data/site';
+
+const A = 'https://www.adventrix.es';
+const tel = 'tel:+34925634325';
+
+const acts = ['Multiaventura y tirolinas', 'Jungle Park', 'Ninja Warrior', 'Tirolina gigante de 200 m', 'Rocódromo y boulder', 'Archery tag', 'Galería de tiro', 'Gymkhana de orientación', 'Piscina semiolímpica', 'Súper tobogán', 'Hinchables', 'Fiesta de la espuma', 'Mini golf pirata', 'Karts de pedales', 'Camas elásticas', 'Karaoke y discoteca joven'];
+const cumples = ['Cumple Aventura', 'Cumple Aventura Plus', 'Cumple Veraniego', 'Cumple Veraniego Infantil'];
+const zonas = ['Albergue', 'Hospedería', 'Residencia', 'Cabañas de madera'];
+const quick = [
+  { t: 'Actividades', d: 'Todas las actividades del parque', h: `${A}/actividades`, c: '#0a9ddb' },
+  { t: 'Colegios', d: 'Visitas de día y estancias', h: `${A}/colegios`, c: '#e0457b' },
+  { t: 'Cumpleaños', d: 'Elige el cumple ideal', h: `${A}/cumples-y-celebraciones`, c: '#0a9ddb' },
+  { t: 'Alojamiento', d: 'Ven y quédate', h: `${A}/alojamiento`, c: '#e0457b' },
+  { t: 'Disponibilidad', d: 'Consulta fechas libres', h: `${A}/disponibilidadaventura`, c: '#0a9ddb' },
+  { t: 'Solicitar presupuesto', d: 'Para colegios y grupos', h: `${A}/solicitar-presupuesto`, c: '#e0457b' },
+  { t: 'Inscripción', d: 'Inscribe a tu participante', h: `${A}/inscripcion`, c: '#0a9ddb' },
+  { t: 'Mi Adventrix', d: 'Área privada', h: `${A}/area-privada`, c: '#e0457b' },
+];
+const faqs = [
+  { q: '¿Adventrix es de Vórtice?', a: 'No. Adventrix es un parque independiente en Toledo. Vórtice colabora aportando monitores y gestionando los grupos.' },
+  { q: '¿Cómo reservo una excursión de colegio?', a: 'Consulta la disponibilidad en adventrix.es y rellena el formulario de solicitud. Si necesitas ayuda con la gestión del grupo, escríbenos.' },
+  { q: '¿Dónde reservo un cumpleaños?', a: 'Directamente en la web de Adventrix, en su sección de cumpleaños y celebraciones, donde verás los paquetes, condiciones y tarifas actualizadas.' },
+];
+const schema = [{
+  '@context': 'https://schema.org', '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+}];
+---
+<Base
+  theme="adv"
+  title="Adventrix Toledo: parque de ocio, colegios y cumpleaños"
+  description="Adventrix, tu parque de ocio al aire libre en Toledo: multiaventura, tirolinas, piscina, colegios y cumpleaños. Monitores y grupos gestionados por Vórtice."
+  schema={schema}
+>
+  <!-- HERO estilo Adventrix -->
+  <section class="pt-24 md:pt-28 px-3 md:px-6">
+    <div class="relative mx-auto max-w-[1280px] overflow-hidden rounded-[2rem] min-h-[34rem] md:min-h-[40rem] grid place-items-center text-center">
+      <img src="/img/adv-cumple.webp" alt="Niños en el parque de cuerdas de Adventrix en Toledo" class="absolute inset-0 size-full object-cover" width="1400" height="788" fetchpriority="high" />
+      <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/45"></div>
+      <div class="relative px-5 py-20">
+        <h1 class="text-[clamp(3.5rem,12vw,9rem)] leading-none uppercase" style="color:#0a9ddb;-webkit-text-stroke:3px #fff;paint-order:stroke fill;text-shadow:0 8px 30px rgba(0,0,0,.35)">Adventrix</h1>
+        <p class="mt-4 text-2xl md:text-3xl font-semibold text-white" style="font-family:'Fredoka',sans-serif;text-shadow:0 3px 14px rgba(0,0,0,.55)">Tu parque de ocio al aire libre</p>
+        <div class="mt-9 flex flex-wrap justify-center gap-3">
+          <a href={A} rel="noopener" class="btn btn-primary text-lg">Ir a adventrix.es ↗</a>
+          <a href="#info" class="btn btn-ghost text-lg">Ver qué hay</a>
+        </div>
+      </div>
+    </div>
+    <div class="stripe mt-6 rounded-full mx-auto max-w-[1280px]" aria-hidden="true"></div>
+  </section>
+
+  <!-- Qué hace Vórtice -->
+  <section id="info" class="mx-auto max-w-6xl px-5 pt-20 scroll-mt-24 grid gap-10 md:grid-cols-5 items-center">
+    <div class="md:col-span-3">
+      <p class="reveal font-bold text-[#0a9ddb] tracking-widest uppercase text-sm">Colaboramos con Adventrix</p>
+      <h2 class="reveal mt-2 text-4xl md:text-6xl" style="--delay:80ms">Los monitores y los grupos, <em>de nuestra mano.</em></h2>
+      <p class="reveal mt-5 text-lg text-mute" style="--delay:140ms">Adventrix es un parque de aventura y ocio en Toledo, «de toda la vida pero con actividades innovadoras». Desde Vórtice ponemos el equipo de monitores y gestionamos los grupos para que cada visita salga redonda.</p>
+      <ul class="reveal mt-6 grid gap-3 font-semibold" style="--delay:200ms">
+        <li class="flex gap-3"><span class="grid place-items-center size-7 rounded-full bg-[#ff89ae] text-white text-sm shrink-0">✓</span>Monitores para colegios, cumpleaños y grupos</li>
+        <li class="flex gap-3"><span class="grid place-items-center size-7 rounded-full bg-[#ff89ae] text-white text-sm shrink-0">✓</span>Gestión y organización de los grupos</li>
+        <li class="flex gap-3"><span class="grid place-items-center size-7 rounded-full bg-[#ff89ae] text-white text-sm shrink-0">✓</span>Un/a monitor/a dedicado por grupo en cumpleaños</li>
+      </ul>
+    </div>
+    <div class="md:col-span-2 reveal rounded-[2rem] overflow-hidden border-4 border-[#ffc4d6]" style="--delay:120ms">
+      <img src="/img/adv-hinchables.webp" alt="Hinchables acuáticos y piscina del parque Adventrix" class="w-full aspect-[4/5] object-cover" width="1400" height="1000" loading="lazy" decoding="async" />
+    </div>
+  </section>
+
+  <!-- Actividades -->
+  <section class="mx-auto max-w-6xl px-5 pt-24">
+    <h2 class="reveal text-4xl md:text-5xl">Qué se hace en <em>Adventrix</em></h2>
+    <ul class="reveal mt-8 flex flex-wrap gap-2.5 font-semibold">
+      {acts.map((a, i) => <li class={`rounded-full px-5 py-2.5 text-white ${i % 2 ? 'bg-[#ff89ae]' : 'bg-[#0a9ddb]'}`}>{a}</li>)}
+    </ul>
+    <p class="mt-6"><a class="font-bold text-[#0a9ddb] underline underline-offset-4" href={`${A}/actividades`} rel="noopener">Ver todas las actividades con sus fichas en adventrix.es ↗</a></p>
+  </section>
+
+  <!-- Colegios + Cumpleaños + Alojamiento -->
+  <section class="mx-auto max-w-6xl px-5 pt-24 grid gap-5 md:grid-cols-3">
+    <article class="spot reveal p-8 flex flex-col">
+      <h3 class="text-3xl">Colegios</h3>
+      <p class="mt-3 text-mute">«Adventrix, con tu clase, ¡es más Adventrix!» Visitas de día (Daylife) y estancias. Un entorno idílico y un equipo de monitores que se encarga de todo.</p>
+      <a href={`${A}/colegios`} rel="noopener" class="btn btn-primary mt-auto self-start mt-6">Ver colegios ↗</a>
+    </article>
+    <article class="spot reveal p-8 flex flex-col" style="--delay:90ms">
+      <h3 class="text-3xl">Cumpleaños</h3>
+      <ul class="mt-3 text-mute grid gap-1.5">{cumples.map((c) => <li>• {c}</li>)}</ul>
+      <p class="mt-3 text-sm text-mute">Condiciones, edades y tarifas actualizadas en su web.</p>
+      <a href={`${A}/cumples-y-celebraciones`} rel="noopener" class="btn btn-ghost mt-auto self-start mt-6">Elegir cumple ↗</a>
+    </article>
+    <article class="spot reveal p-8 flex flex-col" style="--delay:180ms">
+      <h3 class="text-3xl">Alojamiento</h3>
+      <ul class="mt-3 text-mute grid gap-1.5">{zonas.map((z) => <li>• {z}</li>)}</ul>
+      <p class="mt-3 text-sm text-mute">Para grupos escolares y estancias.</p>
+      <a href={`${A}/alojamiento`} rel="noopener" class="btn btn-primary mt-auto self-start mt-6">Ver alojamiento ↗</a>
+    </article>
+  </section>
+
+  <!-- Fotos -->
+  <section class="mx-auto max-w-6xl px-5 pt-14 grid gap-4 md:grid-cols-3">
+    {[['/img/adv-piscina.webp', 'Alojamiento y explanada de Adventrix'], ['/img/adv-aerea.webp', 'Vista aérea de Adventrix con la piscina'], ['/img/adv-albergue.webp', 'Habitación del albergue de Adventrix']].map(([s, a]) => (
+      <img src={s} alt={a} class="reveal w-full aspect-[4/3] object-cover rounded-[1.5rem] border-4 border-[#ffc4d6]" width="1400" height="1050" loading="lazy" decoding="async" />
+    ))}
+  </section>
+
+  <!-- Enlaces directos -->
+  <section class="mx-auto max-w-6xl px-5 pt-24">
+    <h2 class="reveal text-4xl md:text-5xl">Reserva y gestiona <em>directamente</em></h2>
+    <p class="reveal mt-3 text-mute">Estos enlaces te llevan a la web oficial de Adventrix.</p>
+    <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {quick.map((q, i) => (
+        <a href={q.h} rel="noopener" class="spot reveal p-6 flex flex-col min-h-36" style={`--delay:${(i % 4) * 70}ms`}>
+          <span class="font-display text-2xl" style={`color:${q.c}`}>{q.t}</span>
+          <span class="mt-1 text-mute text-sm">{q.d}</span>
+          <span class="mt-auto pt-4 font-bold">Abrir ↗</span>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <!-- Contacto Adventrix -->
+  <section class="mx-auto max-w-6xl px-5 pt-24">
+    <div class="reveal rounded-[2rem] p-8 md:p-12 text-white grid gap-8 md:grid-cols-2" style="background:#0a9ddb; border-bottom:14px solid #ff89ae">
+      <div>
+        <h2 class="text-4xl md:text-5xl">Contacto de Adventrix</h2>
+        <p class="mt-4 text-white/90">Paseo Pozuela 31, 45004 Toledo</p>
+        <p class="mt-2 text-white/90">Atención telefónica: L–V de 9:00 a 19:00</p>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <a href={tel} class="btn bg-white text-[#0a9ddb]">925 63 43 25</a>
+          <a href="mailto:hola@adventrix.es" class="btn bg-[#ff89ae] text-white">hola@adventrix.es</a>
+        </div>
+      </div>
+      <dl class="grid grid-cols-2 gap-x-6 gap-y-2 text-white/95 content-center">
+        <dt class="font-bold">Lunes a jueves</dt><dd>17–21 h</dd>
+        <dt class="font-bold">Viernes</dt><dd>17–22 h</dd>
+        <dt class="font-bold">Sábados</dt><dd>10–22 h</dd>
+        <dt class="font-bold">Domingos</dt><dd>10–21 h</dd>
+      </dl>
+    </div>
+    <p class="mt-5 text-sm text-mute">¿Necesitas monitores o ayuda con la gestión de un grupo? <a class="font-bold text-[#0a9ddb] underline" href="/contacto">Habla con Vórtice</a>.</p>
+  </section>
+
+  <section class="mx-auto max-w-3xl px-5 pt-24">
+    <h2 class="reveal text-4xl md:text-5xl">Preguntas <em>frecuentes</em></h2>
+    <div class="mt-8 grid gap-3">
+      {faqs.map((f) => <details class="reveal glass rounded-2xl p-5"><summary class="font-bold cursor-pointer flex justify-between gap-4">{f.q}<span class="plus text-2xl text-[#ff89ae] transition-transform">+</span></summary><p class="mt-3 text-mute">{f.a}</p></details>)}
+    </div>
+  </section>
+</Base>

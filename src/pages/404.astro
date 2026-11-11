@@ -1,0 +1,19 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE } from '../data/site';
+---
+<Base title="Página no encontrada | Vórtice Eventos" description="La página que buscas no existe. Vuelve al inicio o contacta con Vórtice Eventos." noindex>
+  <section class="relative overflow-hidden pt-44 pb-32 text-center">
+    <div class="aurora" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span></div>
+    <div class="relative z-10 mx-auto max-w-2xl px-5">
+      <p class="font-display text-[8rem] leading-none text-[color:var(--p)]">404</p>
+      <h1 class="mt-2 text-4xl md:text-6xl">Esta fiesta no existe… todavía</h1>
+      <p class="mt-5 text-xl text-mute">Pero la tuya sí podemos organizarla.</p>
+      <div class="mt-8 flex flex-wrap justify-center gap-3">
+        <a href="/" class="btn btn-primary">Ir al inicio</a>
+        <a href="/contacto" class="btn btn-ghost">Pedir presupuesto</a>
+        <a href={SITE.whatsapp} class="btn btn-white">WhatsApp</a>
+      </div>
+    </div>
+  </section>
+</Base>

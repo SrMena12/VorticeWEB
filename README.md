@@ -1,99 +1,43 @@
-# Eventos Vórtice — Web Corporativa
+# Astro Starter Kit: Minimal
 
-Sitio web moderno y optimizado para SEO de **Eventos Vórtice**, empresa de organización de eventos en Toledo.
-
-## Stack tecnológico
-
-- **React 18** + **Vite 5**
-- **TailwindCSS 3** — estilos utility-first
-- **Framer Motion** — animaciones fluidas
-- **React Router v6** — enrutamiento SPA
-- **React Helmet Async** — SEO dinámico
-
-## Instalación y uso
-
-```bash
-# Instalar dependencias
-npm install
-
-# Servidor de desarrollo
-npm run dev
-
-# Build de producción
-npm run build
-
-# Preview del build
-npm run preview
+```sh
+npm create astro@latest -- --template minimal
 ```
 
-## Estructura del proyecto
+> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
 
-```
-src/
-├── components/
-│   ├── hooks/
-│   │   └── useInView.js          # Hook IntersectionObserver
-│   ├── layout/
-│   │   ├── Navbar.jsx             # Navegación con dropdown
-│   │   └── Footer.jsx             # Pie de página completo
-│   ├── sections/
-│   │   ├── Hero.jsx               # Sección principal con stats
-│   │   ├── Services.jsx           # Grid de 4 servicios
-│   │   ├── Benefits.jsx           # 4 beneficios clave
-│   │   ├── Process.jsx            # Proceso en 4 pasos
-│   │   ├── Portfolio.jsx          # Galería filtrable
-│   │   ├── Clients.jsx            # Ticker de clientes
-│   │   ├── Testimonials.jsx       # Slider de testimonios
-│   │   ├── FAQ.jsx                # Acordeón FAQ con Schema.org
-│   │   ├── CTAFinal.jsx           # CTA de conversión final
-│   │   └── ContactForm.jsx        # Formulario de contacto
-│   └── ui/
-│       ├── SEOHead.jsx            # Componente Helmet reutilizable
-│       └── ServicePageTemplate.jsx # Template para páginas de servicio
-├── pages/
-│   ├── Home.jsx
-│   ├── EventosCorporativos.jsx
-│   ├── EventosEmpresa.jsx
-│   ├── EventosPrivados.jsx
-│   ├── EventosAyuntamientos.jsx
-│   ├── Contacto.jsx
-│   └── NotFound.jsx
-├── App.jsx                        # Router principal
-├── main.jsx                       # Entry point
-└── index.css                      # Estilos globales + Tailwind
-public/
-├── sitemap.xml                    # Sitemap SEO
-├── robots.txt                     # Directivas para crawlers
-└── favicon.svg                    # Favicon vectorial
+## 🚀 Project Structure
+
+Inside of your Astro project, you'll see the following folders and files:
+
+```text
+/
+├── public/
+├── src/
+│   └── pages/
+│       └── index.astro
+└── package.json
 ```
 
-## SEO implementado
+Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
 
-- ✅ Títulos y meta descriptions únicos por página
-- ✅ Open Graph y Twitter Cards
-- ✅ Schema.org LocalBusiness (index.html)
-- ✅ Schema.org Service (páginas de servicio)
-- ✅ Schema.org FAQ (sección FAQ)
-- ✅ Jerarquía H1 > H2 > H3 correcta
-- ✅ URLs semánticas amigables
-- ✅ Canonical tags
-- ✅ sitemap.xml
-- ✅ robots.txt
-- ✅ Lazy loading con IntersectionObserver
+There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
 
-## Personalización
+Any static assets, like images, can be placed in the `public/` directory.
 
-### Datos de contacto
-Actualizar en `src/components/layout/Footer.jsx` y `src/pages/Contacto.jsx`:
-- Teléfono: `+34925000000`
-- Email: `info@eventosvortice.com`
-- Dirección: Calle Alegría 48, 45008 Toledo
+## 🧞 Commands
 
-### Google Maps
-Reemplazar el iframe embed en `src/pages/Contacto.jsx` con el embed real de Google Maps.
+All commands are run from the root of the project, from a terminal:
 
-### Formulario
-Conectar `src/components/sections/ContactForm.jsx` a tu backend o servicio de email (Formspree, EmailJS, etc.).
+| Command                   | Action                                           |
+| :------------------------ | :----------------------------------------------- |
+| `npm install`             | Installs dependencies                            |
+| `npm run dev`             | Starts local dev server at `localhost:4321`      |
+| `npm run build`           | Build your production site to `./dist/`          |
+| `npm run preview`         | Preview your build locally, before deploying     |
+| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
+| `npm run astro -- --help` | Get help using the Astro CLI                     |
 
-### Imágenes
-Las imágenes del portfolio son placeholders generados con SVG. Reemplazar en `src/components/sections/Portfolio.jsx` con imágenes reales usando `<img loading="lazy" />`.
+## 👀 Want to learn more?
+
+Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
