@@ -1,0 +1,41 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE } from '../data/site';
+---
+<Base
+  title="Política de privacidad | Vórtice Eventos"
+  description="Cómo trata Vórtice Eventos los datos personales de las inscripciones a eventos y de los formularios de contacto."
+>
+  <section class="relative overflow-hidden pt-40 pb-10">
+    <div class="aurora" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span></div>
+    <div class="relative z-10 mx-auto max-w-3xl px-5">
+      <h1 class="text-[clamp(2.4rem,6vw,4.4rem)] leading-[1.02]">Política de <em>privacidad</em></h1>
+    </div>
+  </section>
+  <div class="mx-auto max-w-3xl px-5 pb-24 grid gap-6 text-lg leading-relaxed">
+    <section>
+      <h2 class="text-3xl">Quién es el responsable</h2>
+      <p class="mt-2">{SITE.name}, con domicilio en {SITE.street}, {SITE.postal} {SITE.city}. Contacto: <a class="underline text-[color:var(--pt)]" href={`mailto:${SITE.email}`}>{SITE.email}</a> · {SITE.phone}.</p>
+    </section>
+    <section>
+      <h2 class="text-3xl">Qué datos recogemos y para qué</h2>
+      <p class="mt-2">Cuando te inscribes a un evento recogemos tu nombre, email, teléfono, el número de plazas y los comentarios que quieras añadir. Los usamos únicamente para gestionar tu inscripción, avisarte de cambios del evento y ponernos en contacto contigo si es necesario.</p>
+    </section>
+    <section>
+      <h2 class="text-3xl">Base legal</h2>
+      <p class="mt-2">Tu consentimiento, que das al marcar la casilla del formulario, y la ejecución de tu solicitud de participar en el evento.</p>
+    </section>
+    <section>
+      <h2 class="text-3xl">Cuánto tiempo los conservamos</h2>
+      <p class="mt-2">Las inscripciones se borran automáticamente unos 30 días después de que termine el evento. Puedes pedir que las borremos antes.</p>
+    </section>
+    <section>
+      <h2 class="text-3xl">Con quién los compartimos</h2>
+      <p class="mt-2">No vendemos ni cedemos tus datos. Para funcionar usamos proveedores que los tratan por encargo nuestro: alojamiento de la web y base de datos (Vercel y Neon) y envío de correos (Resend).</p>
+    </section>
+    <section>
+      <h2 class="text-3xl">Tus derechos</h2>
+      <p class="mt-2">Puedes acceder a tus datos, rectificarlos, suprimirlos, oponerte a su tratamiento, limitarlo o pedir su portabilidad escribiendo a <a class="underline text-[color:var(--pt)]" href={`mailto:${SITE.email}`}>{SITE.email}</a>. Si crees que no hemos tratado bien tus datos, puedes reclamar ante la Agencia Española de Protección de Datos (aepd.es).</p>
+    </section>
+  </div>
+</Base>

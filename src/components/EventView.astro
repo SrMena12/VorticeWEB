@@ -1,0 +1,136 @@
+---
+import Base from '../layouts/Base.astro';
+import { eventState, STATE_LABEL, seatsLeft, fmtDate, fmtTime, type EventRow } from '../lib/util';
+import { SITE } from '../data/site';
+
+const { ev } = Astro.props as { ev: EventRow };
+const st = eventState(ev);
+const left = seatsLeft(ev);
+const maxPer = Math.min(10, left ?? 10);
+const paragraphs = (ev.description || '').split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+const badge: Record<string, string> = {
+  open: 'bg-[#d9f7e3] text-[#0f6b34]', full: 'bg-[#ffe3e8] text-[#a3182f]',
+  closed: 'bg-[#fff1cc] text-[#8a5a00]', past: 'bg-[#e8eef3] text-[#44596a]',
+};
+const url = `${SITE.url}/eventos/${ev.slug}`;
+const image = ev.image_url || '/og.png';
+const schema = [{
+  '@context': 'https://schema.org', '@type': 'Event', name: ev.title,
+  description: ev.summary || ev.description.slice(0, 200),
+  startDate: new Date(ev.starts_at).toISOString(),
+  ...(ev.ends_at ? { endDate: new Date(ev.ends_at).toISOString() } : {}),
+  eventStatus: 'https://schema.org/EventScheduled',
+  eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+  location: { '@type': 'Place', name: ev.location || 'Toledo', address: { '@type': 'PostalAddress', addressLocality: 'Toledo', addressCountry: 'ES' } },
+  image: [new URL(image, SITE.url).href],
+  organizer: { '@id': `${SITE.url}/#empresa` },
+  offers: { '@type': 'Offer', url, price: '0', priceCurrency: 'EUR', availability: st === 'open' ? 'https://schema.org/InStock' : 'https://schema.org/SoldOut' },
+}];
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=120');
+---
+<Base
+  title={`${ev.title} | Eventos en Toledo | Vórtice`}
+  description={ev.summary || `${ev.title}: ${fmtDate(ev.starts_at)} en ${ev.location || 'Toledo'}. Inscríbete online.`}
+  schema={schema}
+  image={image}
+>
+  <article>
+    <header class="relative overflow-hidden pt-40 pb-10">
+      <div class="aurora" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span></div>
+      <div class="relative z-10 mx-auto max-w-5xl px-5">
+        <nav aria-label="Migas" class="text-sm font-semibold text-mute"><a class="hover:text-fg" href="/">Inicio</a> / <a class="hover:text-fg" href="/eventos">Eventos</a></nav>
+        <span class={`mt-5 inline-block text-xs font-extrabold px-3 py-1 rounded-full ${badge[st]}`}>{STATE_LABEL[st]}</span>
+        <h1 class="mt-3 text-[clamp(2.4rem,6vw,4.6rem)] leading-[1.02]">{ev.title}</h1>
+        <p class="mt-4 text-lg font-semibold text-mute">
+          <time datetime={new Date(ev.starts_at).toISOString()}>{fmtDate(ev.starts_at)} · {fmtTime(ev.starts_at)} h</time>
+          {ev.location ? <> · {ev.location}</> : null}
+        </p>
+      </div>
+    </header>
+
+    <div class="mx-auto max-w-5xl px-5 grid gap-10 lg:grid-cols-5">
+      <div class="lg:col-span-3">
+        {ev.image_url && <img src={ev.image_url} alt={ev.title} width="1400" height="875" class="w-full aspect-[16/10] object-cover rounded-[1.75rem] border-4 border-white shadow-[0_18px_40px_-20px_rgba(13,47,74,.6)]" />}
+        {ev.summary && <p class="mt-8 text-2xl font-display leading-snug">{ev.summary}</p>}
+        <div class="mt-6 grid gap-4 text-lg leading-relaxed">
+          {paragraphs.map((p) => <p>{p}</p>)}
+        </div>
+      </div>
+
+      <aside class="lg:col-span-2">
+        <div class="glass rounded-[2rem] p-6 md:p-7 lg:sticky lg:top-28" id="inscripcion">
+          <h2 class="text-3xl">Inscripción</h2>
+          {left != null && st === 'open' && <p class="mt-1 text-sm font-bold text-[color:var(--pt)]">{left} plaza{left === 1 ? '' : 's'} libre{left === 1 ? '' : 's'}</p>}
+
+          {st === 'open' ? (
+            <form id="regform" class="mt-5 grid gap-4" novalidate>
+              <input type="hidden" name="event_id" value={ev.id} />
+              <div class="absolute -left-[9999px]" aria-hidden="true"><label>No rellenar<input name="website" tabindex="-1" autocomplete="off" /></label></div>
+              <label class="grid gap-1.5 text-sm font-bold">Nombre y apellidos
+                <input class="field font-normal" name="name" required autocomplete="name" maxlength="120" />
+              </label>
+              <label class="grid gap-1.5 text-sm font-bold">Email
+                <input class="field font-normal" type="email" name="email" required autocomplete="email" maxlength="200" />
+              </label>
+              <label class="grid gap-1.5 text-sm font-bold">Teléfono
+                <input class="field font-normal" type="tel" name="phone" required autocomplete="tel" maxlength="40" />
+              </label>
+              {maxPer > 1 && (
+                <label class="grid gap-1.5 text-sm font-bold">¿Cuántas plazas?
+                  <select class="field font-normal" name="attendees">
+                    {Array.from({ length: maxPer }, (_, i) => <option value={i + 1}>{i + 1}</option>)}
+                  </select>
+                </label>
+              )}
+              <label class="grid gap-1.5 text-sm font-bold">Comentarios (opcional)
+                <textarea class="field font-normal" name="notes" rows="2" maxlength="500" placeholder="Alergias, necesidades de accesibilidad…"></textarea>
+              </label>
+              <label class="flex items-start gap-3 text-sm">
+                <input class="mt-0.5 size-5 shrink-0 accent-[#0a9ddb]" type="checkbox" name="privacy" required />
+                <span>He leído y acepto la <a class="underline font-bold text-[color:var(--pt)]" href="/privacidad" target="_blank" rel="noopener">política de privacidad</a>.</span>
+              </label>
+              <p id="regerr" class="text-[#d9304f] text-sm font-bold" role="alert" hidden></p>
+              <button id="regbtn" class="btn btn-primary w-full" type="submit">Apuntarme</button>
+            </form>
+            <div id="regok" class="mt-5 p-5 rounded-2xl bg-[#d9f7e3] text-[#0f6b34]" role="status" hidden>
+              <strong class="block text-xl font-display">¡Inscripción confirmada!</strong>
+              <p class="mt-1">Te hemos guardado la plaza. Si tenemos tu email, recibirás la confirmación en breve.</p>
+            </div>
+          ) : (
+            <div class="mt-4">
+              <p class="text-lg font-semibold">
+                {st === 'full' && 'Las plazas se han agotado.'}
+                {st === 'closed' && 'Las inscripciones de este evento están cerradas.'}
+                {st === 'past' && 'Este evento ya ha terminado.'}
+              </p>
+              <p class="mt-2 text-mute">¿Quieres que te avisemos del próximo? Escríbenos.</p>
+              <a class="btn btn-primary mt-4" href="/contacto">Contactar</a>
+              <a class="block mt-4 font-bold text-[color:var(--pt)] underline" href="/eventos">Ver otros eventos</a>
+            </div>
+          )}
+        </div>
+      </aside>
+    </div>
+  </article>
+
+  <div class="pb-24"></div>
+  <script is:inline>
+    (function () {
+      var f = document.getElementById('regform'); if (!f) return;
+      var err = document.getElementById('regerr'), ok = document.getElementById('regok'), btn = document.getElementById('regbtn');
+      f.addEventListener('submit', async function (e) {
+        e.preventDefault(); err.hidden = true;
+        if (!f.checkValidity()) { f.reportValidity(); return; }
+        var d = Object.fromEntries(new FormData(f)); d.privacy = f.privacy.checked;
+        btn.disabled = true; var label = btn.textContent; btn.textContent = 'Enviando…';
+        try {
+          var r = await fetch('/api/inscripcion', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(d) });
+          var j = await r.json().catch(function () { return {}; });
+          if (r.ok && j.ok) { f.hidden = true; ok.hidden = false; ok.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+          else { err.textContent = j.error || 'No se pudo completar la inscripción.'; err.hidden = false; btn.disabled = false; btn.textContent = label; }
+        } catch (x) { err.textContent = 'Sin conexión. Inténtalo de nuevo.'; err.hidden = false; btn.disabled = false; btn.textContent = label; }
+      });
+    })();
+  </script>
+</Base>
+

@@ -1,0 +1,207 @@
+---
+export const prerender = false;
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import ImageField from '../../../components/ImageField.astro';
+import { sql } from '../../../lib/db';
+import { getEventAdmin, listRegistrations } from '../../../lib/queries';
+import { clean, slugify, madridLocalToDate, toMadridLocal, fmtDateShort, fmtTime, eventState, STATE_LABEL } from '../../../lib/util';
+
+const idParam = Astro.params.id!;
+const isNew = idParam === 'nuevo';
+const id = isNew ? 0 : Number(idParam);
+if (!isNew && !Number.isInteger(id)) return Astro.redirect('/admin/eventos');
+
+let errors: string[] = [];
+let flash = '';
+let dbError = false;
+let ev: any = null;
+let regs: any[] = [];
+
+// Valores del formulario (se rellenan con lo guardado o con lo que se envió si hubo errores).
+let v: Record<string, any> = {
+  title: '', slug: '', summary: '', description: '', location: '', starts_at: '', ends_at: '',
+  capacity: '', image_url: '', registration_open: true, published: true,
+};
+
+try {
+  if (!isNew) {
+    ev = await getEventAdmin(id);
+    if (!ev) return Astro.redirect('/admin/eventos');
+    v = {
+      title: ev.title, slug: ev.slug, summary: ev.summary, description: ev.description, location: ev.location,
+      starts_at: toMadridLocal(ev.starts_at), ends_at: toMadridLocal(ev.ends_at), capacity: ev.capacity ?? '',
+      image_url: ev.image_url ?? '', registration_open: ev.registration_open, published: ev.published,
+    };
+  }
+
+  if (Astro.request.method === 'POST') {
+    const form = await Astro.request.formData();
+    const action = String(form.get('action') ?? 'save');
+
+    if (action === 'delete_reg' && !isNew) {
+      await sql`DELETE FROM registrations WHERE id = ${Number(form.get('reg_id'))} AND event_id = ${id}`;
+      return Astro.redirect(`/admin/eventos/${id}?msg=inscripcion-borrada`);
+    }
+
+    v = {
+      title: clean(form.get('title'), 160), slug: clean(form.get('slug'), 80),
+      summary: clean(form.get('summary'), 300), description: clean(form.get('description'), 8000),
+      location: clean(form.get('location'), 200), starts_at: clean(form.get('starts_at'), 20),
+      ends_at: clean(form.get('ends_at'), 20), capacity: clean(form.get('capacity'), 6),
+      image_url: clean(form.get('image_url'), 600),
+      registration_open: form.get('registration_open') === 'on', published: form.get('published') === 'on',
+    };
+
+    const starts = madridLocalToDate(v.starts_at);
+    const ends = v.ends_at ? madridLocalToDate(v.ends_at) : null;
+    const capacity = v.capacity === '' ? null : Number(v.capacity);
+
+    if (v.title.length < 3) errors.push('Pon un título para el evento.');
+    if (!starts) errors.push('Indica la fecha y hora de inicio.');
+    if (v.ends_at && !ends) errors.push('La fecha de fin no es válida.');
+    if (starts && ends && ends <= starts) errors.push('El fin debe ser posterior al inicio.');
+    if (capacity !== null && (!Number.isInteger(capacity) || capacity < 0)) errors.push('El aforo debe ser un número entero (o déjalo vacío para no limitar).');
+    if (!isNew && capacity !== null && Number.isInteger(capacity) && capacity < ev.taken) {
+      errors.push(`Ya hay ${ev.taken} plazas reservadas: el aforo no puede ser menor.`);
+    }
+    if (v.image_url && !/^(https:\/\/|\/)/.test(v.image_url)) errors.push('La imagen debe ser una dirección https:// o una ruta de la web.');
+
+    if (!errors.length) {
+      const base = slugify(v.slug || v.title) || 'evento';
+      let slug = base;
+      for (let i = 0; i < 6; i++) {
+        try {
+          if (isNew) {
+            const r = await sql`
+              INSERT INTO events (slug, title, summary, description, location, starts_at, ends_at, capacity, registration_open, published, image_url)
+              VALUES (${slug}, ${v.title}, ${v.summary}, ${v.description}, ${v.location}, ${starts}, ${ends}, ${capacity}, ${v.registration_open}, ${v.published}, ${v.image_url || null})
+              RETURNING id`;
+            return Astro.redirect(`/admin/eventos/${r[0].id}?msg=creado`);
+          }
+          await sql`
+            UPDATE events SET slug = ${slug}, title = ${v.title}, summary = ${v.summary}, description = ${v.description},
+              location = ${v.location}, starts_at = ${starts}, ends_at = ${ends}, capacity = ${capacity},
+              registration_open = ${v.registration_open}, published = ${v.published}, image_url = ${v.image_url || null}, updated_at = now()
+            WHERE id = ${id}`;
+          return Astro.redirect(`/admin/eventos/${id}?msg=guardado`);
+        } catch (e: any) {
+          if (e?.code === '23505') { slug = `${base}-${i + 2}`; continue; } // dirección repetida: probamos con -2, -3…
+          throw e;
+        }
+      }
+      errors.push('No se pudo generar una dirección única para el evento. Cambia el título.');
+    }
+  }
+
+  if (!isNew) regs = await listRegistrations(id);
+  const m = Astro.url.searchParams.get('msg');
+  flash = ({ creado: 'Evento creado. Ya está en la web.', guardado: 'Cambios guardados.', 'inscripcion-borrada': 'Inscripción eliminada.' } as Record<string, string>)[m ?? ''] ?? '';
+} catch (e) {
+  console.error('admin evento', e);
+  dbError = true;
+}
+
+const state = ev ? eventState(ev) : null;
+const people = regs.reduce((s, r) => s + r.attendees, 0);
+---
+<AdminLayout title={isNew ? 'Nuevo evento' : v.title || 'Evento'}>
+  <nav class="text-sm font-bold text-mute"><a class="hover:text-fg" href="/admin/eventos">← Eventos</a></nav>
+  <div class="mt-2 flex flex-wrap items-center gap-3">
+    <h1 class="text-4xl grow">{isNew ? 'Nuevo evento' : v.title}</h1>
+    {ev && state !== 'past' && ev.published && <a class="btn btn-white !py-2 !px-4 text-sm border-2 border-[var(--accl)]" href={`/eventos/${ev.slug}`} target="_blank" rel="noopener">Ver en la web ↗</a>}
+  </div>
+
+  {flash && <p class="mt-4 p-3 rounded-2xl bg-[#d9f7e3] text-[#0f6b34] font-bold" role="status">{flash}</p>}
+  {dbError && <p class="mt-4 p-3 rounded-2xl bg-[#ffe3e8] text-[#a3182f] font-bold" role="alert">Error con la base de datos. Inténtalo de nuevo.</p>}
+  {errors.length > 0 && (
+    <ul class="mt-4 p-4 rounded-2xl bg-[#ffe3e8] text-[#a3182f] font-bold list-disc pl-8" role="alert">{errors.map((e) => <li>{e}</li>)}</ul>
+  )}
+
+  <form method="post" class="mt-6 glass rounded-[2rem] p-6 md:p-8 grid gap-5">
+    <input type="hidden" name="action" value="save" />
+    <label class="grid gap-1.5 text-sm font-bold">Título *
+      <input class="field font-normal" name="title" value={v.title} required maxlength="160" placeholder="Ej.: Gymkhana familiar en el Alcázar" />
+    </label>
+    <label class="grid gap-1.5 text-sm font-bold">Resumen (una frase, sale en el listado)
+      <input class="field font-normal" name="summary" value={v.summary} maxlength="300" />
+    </label>
+    <label class="grid gap-1.5 text-sm font-bold">Descripción
+      <textarea class="field font-normal" name="description" rows="7" maxlength="8000" placeholder="Programa, qué incluye, a quién va dirigido…">{v.description}</textarea>
+      <span class="text-xs font-normal text-mute">Deja una línea en blanco para separar párrafos.</span>
+    </label>
+    <div class="grid gap-5 sm:grid-cols-2">
+      <label class="grid gap-1.5 text-sm font-bold">Comienza *
+        <input class="field font-normal" type="datetime-local" name="starts_at" value={v.starts_at} required />
+      </label>
+      <label class="grid gap-1.5 text-sm font-bold">Termina (opcional)
+        <input class="field font-normal" type="datetime-local" name="ends_at" value={v.ends_at} />
+      </label>
+    </div>
+    <div class="grid gap-5 sm:grid-cols-2">
+      <label class="grid gap-1.5 text-sm font-bold">Lugar
+        <input class="field font-normal" name="location" value={v.location} maxlength="200" placeholder="Ej.: Plaza de Zocodover, Toledo" />
+      </label>
+      <label class="grid gap-1.5 text-sm font-bold">Aforo (plazas)
+        <input class="field font-normal" type="number" min="0" step="1" name="capacity" value={v.capacity} placeholder="Vacío = sin límite" />
+      </label>
+    </div>
+    <ImageField name="image_url" label="Foto del evento" value={v.image_url} />
+    <div class="grid gap-3 sm:grid-cols-2">
+      <label class="flex items-start gap-3 p-4 rounded-2xl border-2 border-[var(--accl)] bg-white cursor-pointer">
+        <input class="mt-1 size-5 accent-[#0a9ddb]" type="checkbox" name="registration_open" checked={v.registration_open} />
+        <span><strong class="block">Inscripciones abiertas</strong><span class="text-sm text-mute">Si lo desmarcas, nadie más podrá apuntarse. Se cierra solo al llenarse el aforo.</span></span>
+      </label>
+      <label class="flex items-start gap-3 p-4 rounded-2xl border-2 border-[var(--accl)] bg-white cursor-pointer">
+        <input class="mt-1 size-5 accent-[#0a9ddb]" type="checkbox" name="published" checked={v.published} />
+        <span><strong class="block">Visible en la web</strong><span class="text-sm text-mute">Desmárcalo para dejarlo como borrador.</span></span>
+      </label>
+    </div>
+    <details class="text-sm">
+      <summary class="font-bold cursor-pointer">Dirección web (avanzado)</summary>
+      <label class="grid gap-1.5 mt-3 font-bold">Se genera sola a partir del título
+        <input class="field font-normal" name="slug" value={v.slug} maxlength="80" placeholder="gymkhana-alcazar" />
+      </label>
+    </details>
+    <div class="flex flex-wrap gap-3">
+      <button class="btn btn-primary" type="submit">{isNew ? 'Crear evento' : 'Guardar cambios'}</button>
+      <a class="btn btn-white border-2 border-[var(--accl)]" href="/admin/eventos">Cancelar</a>
+    </div>
+  </form>
+
+  {!isNew && ev && (
+    <section class="mt-10">
+      <div class="flex flex-wrap items-center gap-3">
+        <h2 class="text-3xl grow">Inscritos <span class="text-mute text-xl">({regs.length} · {people} plaza{people === 1 ? '' : 's'}{ev.capacity != null ? ` de ${ev.capacity}` : ''})</span></h2>
+        {regs.length > 0 && <a class="btn btn-dark !py-2 !px-4 text-sm" href={`/admin/eventos/${id}/inscritos.csv`}>Descargar Excel (CSV)</a>}
+      </div>
+      <p class="mt-1 text-sm text-mute">Estado: <strong>{STATE_LABEL[state!]}</strong></p>
+      {regs.length === 0 ? <p class="mt-3 text-mute">Todavía no se ha apuntado nadie.</p> : (
+        <div class="mt-3 overflow-x-auto glass rounded-3xl">
+          <table class="w-full text-sm min-w-[40rem]">
+            <thead class="text-left text-mute"><tr>
+              <th class="p-3">Nombre</th><th class="p-3">Email</th><th class="p-3">Teléfono</th><th class="p-3">Plazas</th><th class="p-3">Notas</th><th class="p-3">Fecha</th><th class="p-3"></th>
+            </tr></thead>
+            <tbody>
+              {regs.map((r) => (
+                <tr class="border-t border-[var(--accl)] align-top">
+                  <td class="p-3 font-bold">{r.name}</td>
+                  <td class="p-3"><a class="underline" href={`mailto:${r.email}`}>{r.email}</a></td>
+                  <td class="p-3"><a class="underline" href={`tel:${r.phone}`}>{r.phone}</a></td>
+                  <td class="p-3">{r.attendees}</td>
+                  <td class="p-3 max-w-[16rem]">{r.notes}</td>
+                  <td class="p-3 whitespace-nowrap text-mute">{fmtDateShort(r.created_at)} {fmtTime(r.created_at)}</td>
+                  <td class="p-3">
+                    <form method="post" data-confirm={`¿Eliminar la inscripción de ${r.name}? Se liberarán sus plazas.`}>
+                      <input type="hidden" name="action" value="delete_reg" /><input type="hidden" name="reg_id" value={r.id} />
+                      <button class="font-bold text-[#d9304f] hover:underline">Quitar</button>
+                    </form>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  )}
+</AdminLayout>

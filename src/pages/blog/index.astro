@@ -1,11 +1,27 @@
 ---
+export const prerender = false;
 import Base from '../../layouts/Base.astro';
 import { POSTS } from '../../data/blog';
-const covers: Record<string, string> = {
+import { listPostsPublic } from '../../lib/queries';
+import { readingMinutes } from '../../lib/util';
+
+const fallbackCovers: Record<string, string> = {
   'ideas-team-building-toledo': '/img/blog-team-building.webp',
   'como-organizar-fiesta-empresa-toledo': '/img/blog-fiesta-empresa.webp',
   'despedida-de-soltero-toledo-ideas': '/img/serv-despedidas-de-soltero-toledo.webp',
 };
+
+type Card = { slug: string; title: string; desc: string; readMin: number; cover: string };
+let cards: Card[] = [];
+try {
+  cards = (await listPostsPublic()).map((p) => ({
+    slug: p.slug, title: p.title, desc: p.description, readMin: readingMinutes(p.content), cover: p.cover_url || '/og.png',
+  }));
+} catch (e) {
+  console.error('blog', e);
+  cards = POSTS.map((p) => ({ slug: p.slug, title: p.title, desc: p.desc, readMin: p.readMin, cover: fallbackCovers[p.slug] }));
+}
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
 ---
 <Base
   title="Blog de eventos en Toledo: ideas y consejos | Vórtice"
@@ -19,9 +35,9 @@ const covers: Record<string, string> = {
     </div>
   </section>
   <section class="mx-auto max-w-6xl px-5 pt-8 grid gap-5 md:grid-cols-3">
-    {POSTS.map((p, i) => (
+    {cards.map((p, i) => (
       <a href={`/blog/${p.slug}`} class="spot reveal group flex flex-col" style={`--delay:${i * 90}ms`}>
-        <div class="overflow-hidden aspect-[16/10]"><img src={covers[p.slug]} alt="" width="1400" height="933" loading="lazy" decoding="async" class="size-full object-cover transition-transform duration-700 group-hover:scale-105" /></div>
+        <div class="overflow-hidden aspect-[16/10]"><img src={p.cover} alt="" width="1400" height="933" loading="lazy" decoding="async" class="size-full object-cover transition-transform duration-700 group-hover:scale-105" /></div>
         <div class="p-6 flex flex-col flex-1">
           <span class="text-xs font-extrabold tracking-[0.18em] uppercase text-[color:var(--pt)]">{p.readMin} min de lectura</span>
           <h2 class="mt-2 text-2xl">{p.title}</h2>

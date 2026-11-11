@@ -1,0 +1,84 @@
+---
+export const prerender = false;
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { sql, tooMany, clientIp } from '../../lib/db';
+import { hashPassword, setSessionCookie } from '../../lib/auth';
+import { clean, isEmail } from '../../lib/util';
+import { timingSafeEqual } from 'node:crypto';
+
+// Solo funciona mientras NO exista ningún administrador y se conozca SETUP_TOKEN
+// (variable de entorno del proyecto). En cuanto se crea la cuenta, esta página se cierra.
+let error = '';
+let locked = false;
+let email = '';
+const setupToken = process.env.SETUP_TOKEN || '';
+
+try {
+  const [{ n }] = await sql`SELECT count(*)::int AS n FROM admins`;
+  if (n > 0) locked = true;
+
+  if (!locked && Astro.request.method === 'POST') {
+    const form = await Astro.request.formData();
+    const token = String(form.get('token') ?? '');
+    email = clean(form.get('email'), 200).toLowerCase();
+    const password = String(form.get('password') ?? '');
+    const confirm = String(form.get('confirm') ?? '');
+
+    const a = Buffer.from(token), b = Buffer.from(setupToken);
+    const tokenOk = setupToken.length > 0 && a.length === b.length && timingSafeEqual(a, b);
+
+    if (await tooMany(`setup:${clientIp(Astro.request)}`, 6, 15)) error = 'Demasiados intentos. Espera unos minutos.';
+    else if (!tokenOk) error = 'El código de instalación no es correcto.';
+    else if (!isEmail(email)) error = 'Escribe un email válido.';
+    else if (password.length < 10) error = 'La contraseña debe tener al menos 10 caracteres.';
+    else if (password !== confirm) error = 'Las contraseñas no coinciden.';
+    else {
+      const rows = await sql`
+        INSERT INTO admins (email, password_hash)
+        SELECT ${email}, ${hashPassword(password)} WHERE NOT EXISTS (SELECT 1 FROM admins)
+        RETURNING id`;
+      if (!rows.length) locked = true;
+      else {
+        setSessionCookie(Astro.cookies, rows[0].id);
+        return Astro.redirect('/admin');
+      }
+    }
+  }
+} catch (e) {
+  console.error('setup', e);
+  error = 'No se puede conectar con la base de datos. Revisa la configuración.';
+}
+---
+<AdminLayout title="Crear cuenta" bare>
+  <div class="min-h-screen grid place-items-center px-4 py-10">
+    <div class="w-full max-w-md">
+      <div class="flex justify-center mb-6"><img src="/img/logo-vortice.png" alt="Vórtice Eventos" width="503" height="260" class="h-20 w-auto" /></div>
+      {locked ? (
+        <div class="glass rounded-[2rem] p-7 grid gap-3">
+          <h1 class="text-3xl">Instalación completada</h1>
+          <p class="text-mute">La cuenta de administrador ya existe.</p>
+          <a class="btn btn-primary" href="/admin/login">Ir a entrar</a>
+        </div>
+      ) : (
+        <form method="post" class="glass rounded-[2rem] p-7 grid gap-4">
+          <h1 class="text-3xl">Crear cuenta de administrador</h1>
+          <p class="text-sm text-mute">Se hace una sola vez. Necesitas el código de instalación que te dieron al configurar el proyecto.</p>
+          <label class="grid gap-1.5 text-sm font-bold">Código de instalación
+            <input class="field font-normal" type="password" name="token" required autocomplete="off" />
+          </label>
+          <label class="grid gap-1.5 text-sm font-bold">Tu email
+            <input class="field font-normal" type="email" name="email" value={email} required autocomplete="username" />
+          </label>
+          <label class="grid gap-1.5 text-sm font-bold">Contraseña (mín. 10 caracteres)
+            <input class="field font-normal" type="password" name="password" required minlength="10" autocomplete="new-password" />
+          </label>
+          <label class="grid gap-1.5 text-sm font-bold">Repite la contraseña
+            <input class="field font-normal" type="password" name="confirm" required minlength="10" autocomplete="new-password" />
+          </label>
+          {error && <p class="text-[#d9304f] text-sm font-bold" role="alert">{error}</p>}
+          <button class="btn btn-primary w-full" type="submit">Crear cuenta</button>
+        </form>
+      )}
+    </div>
+  </div>
+</AdminLayout>

@@ -1,0 +1,133 @@
+---
+export const prerender = false;
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import ImageField from '../../../components/ImageField.astro';
+import { sql } from '../../../lib/db';
+import { getPostAdmin } from '../../../lib/queries';
+import { SERVICES } from '../../../data/site';
+import { clean, slugify } from '../../../lib/util';
+
+const idParam = Astro.params.id!;
+const isNew = idParam === 'nuevo';
+const id = isNew ? 0 : Number(idParam);
+if (!isNew && !Number.isInteger(id)) return Astro.redirect('/admin/blog');
+
+let errors: string[] = [];
+let flash = '';
+let dbError = false;
+let post: any = null;
+let v: Record<string, any> = { title: '', slug: '', meta_title: '', description: '', content: '', cover_url: '', service: '', published: false };
+
+try {
+  if (!isNew) {
+    post = await getPostAdmin(id);
+    if (!post) return Astro.redirect('/admin/blog');
+    v = { title: post.title, slug: post.slug, meta_title: post.meta_title, description: post.description, content: post.content,
+          cover_url: post.cover_url ?? '', service: post.service ?? '', published: post.published };
+  }
+
+  if (Astro.request.method === 'POST') {
+    const form = await Astro.request.formData();
+    v = {
+      title: clean(form.get('title'), 160), slug: clean(form.get('slug'), 80), meta_title: clean(form.get('meta_title'), 160),
+      description: clean(form.get('description'), 300), content: clean(form.get('content'), 60000),
+      cover_url: clean(form.get('cover_url'), 600), service: clean(form.get('service'), 80),
+      published: form.get('published') === 'on',
+    };
+    if (v.title.length < 3) errors.push('Pon un título.');
+    if (v.content.length < 20) errors.push('El artículo está vacío.');
+    if (v.cover_url && !/^(https:\/\/|\/)/.test(v.cover_url)) errors.push('La imagen debe ser una dirección https:// o una ruta de la web.');
+    if (v.service && !SERVICES.some((s) => s.slug === v.service)) v.service = '';
+
+    if (!errors.length) {
+      const base = slugify(v.slug || v.title) || 'articulo';
+      let slug = base;
+      const meta = v.meta_title || `${v.title} | Vórtice Eventos`;
+      for (let i = 0; i < 6; i++) {
+        try {
+          if (isNew) {
+            const r = await sql`
+              INSERT INTO posts (slug, title, meta_title, description, content, cover_url, service, published, published_at)
+              VALUES (${slug}, ${v.title}, ${meta}, ${v.description}, ${v.content}, ${v.cover_url || null}, ${v.service || null},
+                      ${v.published}, ${v.published ? new Date() : null})
+              RETURNING id`;
+            return Astro.redirect(`/admin/blog/${r[0].id}?msg=creado`);
+          }
+          await sql`
+            UPDATE posts SET slug = ${slug}, title = ${v.title}, meta_title = ${meta}, description = ${v.description},
+              content = ${v.content}, cover_url = ${v.cover_url || null}, service = ${v.service || null}, published = ${v.published},
+              published_at = CASE WHEN ${v.published} AND published_at IS NULL THEN now() ELSE published_at END,
+              updated_at = now()
+            WHERE id = ${id}`;
+          return Astro.redirect(`/admin/blog/${id}?msg=guardado`);
+        } catch (e: any) {
+          if (e?.code === '23505') { slug = `${base}-${i + 2}`; continue; }
+          throw e;
+        }
+      }
+      errors.push('No se pudo generar una dirección única. Cambia el título.');
+    }
+  }
+  const m = Astro.url.searchParams.get('msg');
+  flash = ({ creado: 'Artículo creado.', guardado: 'Cambios guardados.' } as Record<string, string>)[m ?? ''] ?? '';
+} catch (e) {
+  console.error('admin post', e);
+  dbError = true;
+}
+---
+<AdminLayout title={isNew ? 'Nuevo artículo' : v.title || 'Artículo'}>
+  <nav class="text-sm font-bold text-mute"><a class="hover:text-fg" href="/admin/blog">← Blog</a></nav>
+  <div class="mt-2 flex flex-wrap items-center gap-3">
+    <h1 class="text-4xl grow">{isNew ? 'Nuevo artículo' : v.title}</h1>
+    {post?.published && <a class="btn btn-white !py-2 !px-4 text-sm border-2 border-[var(--accl)]" href={`/blog/${post.slug}`} target="_blank" rel="noopener">Ver en la web ↗</a>}
+  </div>
+  {flash && <p class="mt-4 p-3 rounded-2xl bg-[#d9f7e3] text-[#0f6b34] font-bold" role="status">{flash}</p>}
+  {dbError && <p class="mt-4 p-3 rounded-2xl bg-[#ffe3e8] text-[#a3182f] font-bold" role="alert">Error con la base de datos. Inténtalo de nuevo.</p>}
+  {errors.length > 0 && <ul class="mt-4 p-4 rounded-2xl bg-[#ffe3e8] text-[#a3182f] font-bold list-disc pl-8" role="alert">{errors.map((e) => <li>{e}</li>)}</ul>}
+
+  <form method="post" class="mt-6 glass rounded-[2rem] p-6 md:p-8 grid gap-5">
+    <label class="grid gap-1.5 text-sm font-bold">Título *
+      <input class="field font-normal" name="title" value={v.title} required maxlength="160" />
+    </label>
+    <label class="grid gap-1.5 text-sm font-bold">Descripción corta (la que sale en Google y en el listado)
+      <textarea class="field font-normal" name="description" rows="2" maxlength="300">{v.description}</textarea>
+    </label>
+    <ImageField name="cover_url" label="Foto de portada" value={v.cover_url} />
+    <label class="grid gap-1.5 text-sm font-bold">Texto del artículo *
+      <textarea class="field font-normal font-mono text-[15px] leading-relaxed" name="content" rows="18" required>{v.content}</textarea>
+    </label>
+    <div class="rounded-2xl bg-[#e8f4fb] p-4 text-sm">
+      <strong>Cómo se escribe:</strong>
+      <ul class="mt-1 grid gap-1 text-mute">
+        <li>Deja una <strong>línea en blanco</strong> entre párrafos.</li>
+        <li>Para un título de sección, empieza la línea con <code class="font-bold">## </code> (dos almohadillas y un espacio).</li>
+        <li>Para una lista, empieza cada línea con <code class="font-bold">- </code> (guion y espacio).</li>
+      </ul>
+    </div>
+    <label class="grid gap-1.5 text-sm font-bold">Servicio relacionado (para el botón de presupuesto)
+      <select class="field font-normal" name="service">
+        <option value="">Ninguno</option>
+        {SERVICES.map((s) => <option value={s.slug} selected={v.service === s.slug}>{s.title}</option>)}
+      </select>
+    </label>
+    <label class="flex items-start gap-3 p-4 rounded-2xl border-2 border-[var(--accl)] bg-white cursor-pointer">
+      <input class="mt-1 size-5 accent-[#0a9ddb]" type="checkbox" name="published" checked={v.published} />
+      <span><strong class="block">Publicado en la web</strong><span class="text-sm text-mute">Si no lo marcas, queda como borrador y no lo ve nadie.</span></span>
+    </label>
+    <details class="text-sm">
+      <summary class="font-bold cursor-pointer">Opciones de Google (avanzado)</summary>
+      <div class="grid gap-4 mt-3">
+        <label class="grid gap-1.5 font-bold">Título para Google
+          <input class="field font-normal" name="meta_title" value={v.meta_title} maxlength="160" placeholder="Si lo dejas vacío: «Título | Vórtice Eventos»" />
+        </label>
+        <label class="grid gap-1.5 font-bold">Dirección web (se genera sola)
+          <input class="field font-normal" name="slug" value={v.slug} maxlength="80" />
+        </label>
+      </div>
+    </details>
+    <div class="flex flex-wrap gap-3">
+      <button class="btn btn-primary" type="submit">{isNew ? 'Crear artículo' : 'Guardar cambios'}</button>
+      <a class="btn btn-white border-2 border-[var(--accl)]" href="/admin/blog">Cancelar</a>
+    </div>
+  </form>
+</AdminLayout>

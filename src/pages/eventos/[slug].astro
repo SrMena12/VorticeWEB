@@ -1,0 +1,17 @@
+---
+export const prerender = false;
+import EventView from '../../components/EventView.astro';
+import NotFound from '../../components/NotFound.astro';
+import { getEventBySlug } from '../../lib/queries';
+import type { EventRow } from '../../lib/util';
+
+let ev: EventRow | null = null;
+try {
+  ev = await getEventBySlug(Astro.params.slug!);
+} catch (e) {
+  console.error('evento', e);
+}
+if (!ev) Astro.response.status = 404;
+else Astro.response.headers.set('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=120');
+---
+{ev ? <EventView ev={ev} /> : <NotFound />}
