@@ -1,9 +1,25 @@
 ---
+export const prerender = false;
 import Base from '../layouts/Base.astro';
 import { SITE, SERVICES, GROUPS, ACCENT, PHOTO } from '../data/site';
 import { AREAS } from '../data/seo';
 import { POSTS } from '../data/blog';
+import EventCard from '../components/EventCard.astro';
+import { listUpcomingEvents, listPostsPublic } from '../lib/queries';
+import { readingMinutes, type EventRow } from '../lib/util';
 import CtaBand from '../components/CtaBand.astro';
+
+// Datos dinámicos (base de datos). Si falla, la portada se sirve igual sin ellos.
+let upcoming: EventRow[] = [];
+let latest = POSTS.map((p) => ({ slug: p.slug, title: p.title, readMin: p.readMin }));
+try {
+  upcoming = (await listUpcomingEvents(3));
+  const db = await listPostsPublic();
+  if (db.length) latest = db.slice(0, 3).map((p) => ({ slug: p.slug, title: p.title, readMin: readingMinutes(p.content) }));
+} catch (e) {
+  console.error('home', e);
+}
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
 
 const faqs = [
   { q: '¿Cuánto cuesta organizar un evento con Vórtice?', a: 'Depende del tipo de evento, el número de personas y el espacio. Preparamos un presupuesto a medida y sin compromiso, normalmente en menos de 24 horas.' },
@@ -80,6 +96,22 @@ const steps = [
       {[...marquee, ...marquee].map((m, i) => <span class={i % 2 ? 'outline' : ''}>{m} <span class="text-[color:var(--acc)]">✦</span></span>)}
     </div>
   </div>
+
+  <!-- PROXIMOS EVENTOS -->
+  {upcoming.length > 0 && (
+    <section class="mx-auto max-w-6xl px-5 pt-24" id="eventos">
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p class="reveal text-sm font-extrabold tracking-[0.18em] uppercase text-[color:var(--pt)]">Apúntate</p>
+          <h2 class="reveal mt-2 text-4xl md:text-5xl">Próximos <em>eventos</em></h2>
+        </div>
+        <a href="/eventos" class="reveal font-bold text-[color:var(--pt)] underline underline-offset-4">Ver todos →</a>
+      </div>
+      <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {upcoming.map((e) => <EventCard e={e} />)}
+      </div>
+    </section>
+  )}
 
   <!-- SERVICIOS -->
   <section id="servicios" class="mx-auto max-w-6xl px-5 pt-28 scroll-mt-24">
@@ -194,7 +226,7 @@ const steps = [
       <a href="/blog" class="reveal font-bold text-[color:var(--pt)] underline underline-offset-4">Ver todos los artículos →</a>
     </div>
     <div class="mt-8 grid gap-4 md:grid-cols-3">
-      {POSTS.map((p, i) => (
+      {latest.map((p, i) => (
         <a href={`/blog/${p.slug}`} class="spot reveal p-6 flex flex-col min-h-48" style={`--delay:${i * 80}ms`}>
           <span class="text-xs font-extrabold tracking-[0.18em] uppercase text-[color:var(--pt)]">{p.readMin} min de lectura</span>
           <h3 class="mt-2 text-2xl">{p.title}</h3>

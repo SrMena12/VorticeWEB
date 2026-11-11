@@ -1,68 +1,28 @@
 ---
-import Base from '../../layouts/Base.astro';
-import CtaBand from '../../components/CtaBand.astro';
+export const prerender = false;
+import PostView from '../../components/PostView.astro';
+import NotFound from '../../components/NotFound.astro';
 import { POSTS } from '../../data/blog';
-import { SERVICES, SITE } from '../../data/site';
+import { getPostBySlug, listPostsPublic, type PostRow } from '../../lib/queries';
 
-export function getStaticPaths() {
-  return POSTS.map((p) => ({ params: { slug: p.slug }, props: { p } }));
+const slug = Astro.params.slug!;
+let p: PostRow | null = null;
+let others: PostRow[] = [];
+try {
+  p = await getPostBySlug(slug);
+  if (p) others = (await listPostsPublic()).filter((x) => x.slug !== slug).slice(0, 2);
+} catch (e) {
+  console.error('post', e);
+  // Respaldo: si la base de datos no responde, se sirven los artículos que vienen con la web.
+  const s = POSTS.find((x) => x.slug === slug);
+  if (s) {
+    p = {
+      id: 0, slug: s.slug, title: s.title, meta_title: s.metaTitle, description: s.desc, service: s.service, published: true,
+      content: s.body.map((b) => (b.h ? `## ${b.h}\n\n${b.p}` : b.p)).join('\n\n'), cover_url: null, published_at: `${s.date}T10:00:00+01:00`,
+    };
+  }
 }
-const { p } = Astro.props;
-const svc = SERVICES.find((s) => s.slug === p.service)!;
-const covers: Record<string, string> = {
-  'ideas-team-building-toledo': '/img/blog-team-building.webp',
-  'como-organizar-fiesta-empresa-toledo': '/img/blog-fiesta-empresa.webp',
-  'despedida-de-soltero-toledo-ideas': '/img/serv-despedidas-de-soltero-toledo.webp',
-};
-const cover = covers[p.slug];
-const others = POSTS.filter((x) => x.slug !== p.slug);
-const url = `${SITE.url}/blog/${p.slug}`;
-const schema = [
-  {
-    '@context': 'https://schema.org', '@type': 'BlogPosting', headline: p.title, description: p.desc, inLanguage: 'es-ES',
-    datePublished: p.date, dateModified: p.date, mainEntityOfPage: url, image: new URL(cover, SITE.url).href,
-    author: { '@id': `${SITE.url}/#empresa` }, publisher: { '@id': `${SITE.url}/#empresa` },
-  },
-  {
-    '@context': 'https://schema.org', '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Inicio', item: SITE.url },
-      { '@type': 'ListItem', position: 2, name: 'Blog', item: `${SITE.url}/blog` },
-      { '@type': 'ListItem', position: 3, name: p.title, item: url },
-    ],
-  },
-];
+if (!p) Astro.response.status = 404;
+else Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
 ---
-<Base title={p.metaTitle} description={p.desc} schema={schema} image={cover} ogType="article">
-  <article>
-    <header class="relative overflow-hidden pt-40 pb-10">
-      <div class="aurora" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span></div>
-      <div class="relative z-10 mx-auto max-w-3xl px-5">
-        <nav aria-label="Migas" class="text-sm font-semibold text-mute"><a class="hover:text-fg" href="/">Inicio</a> / <a class="hover:text-fg" href="/blog">Blog</a></nav>
-        <h1 class="mt-5 text-[clamp(2.4rem,6vw,4.4rem)] leading-[1.02]">{p.title}</h1>
-        <p class="mt-4 text-mute font-semibold"><time datetime={p.date}>10 de noviembre de 2026</time> · {p.readMin} min de lectura · Vórtice Eventos</p>
-      </div>
-    </header>
-    <div class="mx-auto max-w-3xl px-5">
-      <img src={cover} alt={p.title} width="1400" height="933" class="w-full aspect-[16/9] object-cover rounded-[1.75rem] border-4 border-white shadow-[0_18px_40px_-20px_rgba(13,47,74,.6)]" />
-      <div class="mt-10 grid gap-5 text-lg leading-relaxed">
-        {p.body.map((b) => (
-          <>
-            {b.h && <h2 class="text-3xl md:text-4xl mt-6">{b.h}</h2>}
-            <p>{b.p}</p>
-          </>
-        ))}
-      </div>
-      <p class="mt-10 spot p-6"><strong class="font-display text-2xl block">¿Quieres que nos encarguemos?</strong><a class="mt-2 inline-block font-bold text-[color:var(--pt)] underline underline-offset-4" href={`/servicios/${svc.slug}`}>Descubre nuestro servicio de {svc.title.toLowerCase()} en Toledo →</a></p>
-    </div>
-  </article>
-
-  <CtaBand title="Pide tu presupuesto sin compromiso" tipo={svc.title === 'Despedidas' ? 'Despedida' : svc.title === 'Fiestas de empresa' ? 'Fiesta de empresa' : 'Team building'} />
-
-  <section class="mx-auto max-w-6xl px-5 pt-24">
-    <h2 class="text-3xl md:text-4xl">Sigue leyendo</h2>
-    <div class="mt-6 grid gap-4 sm:grid-cols-2">
-      {others.map((o) => <a href={`/blog/${o.slug}`} class="spot p-6"><h3 class="text-2xl">{o.title}</h3><span class="mt-3 inline-block font-bold text-[color:var(--pt)]">Leer →</span></a>)}
-    </div>
-  </section>
-</Base>
+{p ? <PostView p={p} others={others} /> : <NotFound />}

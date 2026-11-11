@@ -1,0 +1,68 @@
+---
+import Base from '../layouts/Base.astro';
+import CtaBand from './CtaBand.astro';
+import { type PostRow } from '../lib/queries';
+import { parseContent, readingMinutes, fmtDate } from '../lib/util';
+import { SITE } from '../data/site';
+
+const { p, others } = Astro.props as { p: PostRow; others: PostRow[] };
+const blocks = parseContent(p.content);
+const cover = p.cover_url || '/og.png';
+const url = `${SITE.url}/blog/${p.slug}`;
+const published = p.published_at ? new Date(p.published_at) : new Date();
+const tipoPorServicio: Record<string, string> = {
+  'despedidas-de-soltero-toledo': 'Despedida', 'fiestas-de-empresa-toledo': 'Fiesta de empresa', 'team-building-toledo': 'Team building',
+  'formacion-empresas-toledo': 'Formación', 'celebraciones-toledo': 'Celebración privada', 'fiestas-tematicas-toledo': 'Fiesta temática',
+};
+const tipo = p.service ? tipoPorServicio[p.service] : undefined;
+const schema = [
+  {
+    '@context': 'https://schema.org', '@type': 'BlogPosting', headline: p.title, description: p.description, inLanguage: 'es-ES',
+    datePublished: published.toISOString(), dateModified: published.toISOString(), mainEntityOfPage: url, image: new URL(cover, SITE.url).href,
+    author: { '@id': `${SITE.url}/#empresa` }, publisher: { '@id': `${SITE.url}/#empresa` },
+  },
+  {
+    '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Inicio', item: SITE.url },
+      { '@type': 'ListItem', position: 2, name: 'Blog', item: `${SITE.url}/blog` },
+      { '@type': 'ListItem', position: 3, name: p.title, item: url },
+    ],
+  },
+];
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+---
+<Base title={p.meta_title || `${p.title} | Vórtice Eventos`} description={p.description} schema={schema} image={cover} ogType="article">
+  <article>
+    <header class="relative overflow-hidden pt-40 pb-10">
+      <div class="aurora" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span></div>
+      <div class="relative z-10 mx-auto max-w-3xl px-5">
+        <nav aria-label="Migas" class="text-sm font-semibold text-mute"><a class="hover:text-fg" href="/">Inicio</a> / <a class="hover:text-fg" href="/blog">Blog</a></nav>
+        <h1 class="mt-5 text-[clamp(2.4rem,6vw,4.4rem)] leading-[1.02]">{p.title}</h1>
+        <p class="mt-4 text-mute font-semibold"><time datetime={published.toISOString()}>{fmtDate(published)}</time> · {readingMinutes(p.content)} min de lectura · Vórtice Eventos</p>
+      </div>
+    </header>
+    <div class="mx-auto max-w-3xl px-5">
+      {p.cover_url && <img src={cover} alt={p.title} width="1400" height="933" class="w-full aspect-[16/9] object-cover rounded-[1.75rem] border-4 border-white shadow-[0_18px_40px_-20px_rgba(13,47,74,.6)]" />}
+      <div class="mt-10 grid gap-5 text-lg leading-relaxed">
+        {blocks.map((b) =>
+          b.t === 'h' ? <h2 class="text-3xl md:text-4xl mt-6">{b.text}</h2>
+          : b.t === 'ul' ? <ul class="list-disc pl-6 grid gap-1.5">{b.items.map((i) => <li>{i}</li>)}</ul>
+          : <p>{b.text}</p>
+        )}
+      </div>
+      <p class="mt-10 spot p-6"><strong class="font-display text-2xl block">¿Quieres que nos encarguemos?</strong><a class="mt-2 inline-block font-bold text-[color:var(--pt)] underline underline-offset-4" href="/contacto">Cuéntanos tu idea</a></p>
+    </div>
+  </article>
+
+  <CtaBand title="Pide tu presupuesto sin compromiso" tipo={tipo} />
+
+  {others.length > 0 && (
+    <section class="mx-auto max-w-6xl px-5 pt-24">
+      <h2 class="text-3xl md:text-4xl">Sigue leyendo</h2>
+      <div class="mt-6 grid gap-4 sm:grid-cols-2">
+        {others.map((o) => <a href={`/blog/${o.slug}`} class="spot p-6"><h3 class="text-2xl">{o.title}</h3><span class="mt-3 inline-block font-bold text-[color:var(--pt)]">Leer →</span></a>)}
+      </div>
+    </section>
+  )}
+</Base>

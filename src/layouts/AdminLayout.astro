@@ -1,0 +1,56 @@
+---
+import '../styles/global.css';
+
+interface Props { title: string; bare?: boolean; }
+const { title, bare = false } = Astro.props;
+const path = Astro.url.pathname.replace(/\/$/, '');
+const nav = [
+  { href: '/admin', label: 'Resumen' },
+  { href: '/admin/eventos', label: 'Eventos' },
+  { href: '/admin/blog', label: 'Blog' },
+];
+const active = (h: string) => (h === '/admin' ? path === '/admin' : path.startsWith(h));
+---
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{title} · Panel Vórtice</title>
+    <link rel="icon" href="/img/simbolo-vortice.png" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body class="bg-[#f1f8fd] min-h-screen">
+    {!bare && (
+      <header class="bg-[#0d2f4a] text-white">
+        <div class="mx-auto max-w-6xl px-4 py-3 flex flex-wrap items-center gap-x-6 gap-y-2">
+          <a href="/admin" class="flex items-center" aria-label="Panel Vórtice">
+            <img src="/img/logo-vortice-blanco.png" alt="Vórtice Eventos" width="251" height="130" class="h-9 w-auto" />
+            <span class="ml-3 text-xs font-bold uppercase tracking-widest text-[#8fdcff]">Panel</span>
+          </a>
+          <nav class="flex gap-1" aria-label="Panel">
+            {nav.map((n) => (
+              <a href={n.href} aria-current={active(n.href) ? 'page' : undefined}
+                 class={`px-4 py-2 rounded-full font-bold text-sm ${active(n.href) ? 'bg-white text-[#0d2f4a]' : 'text-white/85 hover:bg-white/10'}`}>{n.label}</a>
+            ))}
+          </nav>
+          <div class="ml-auto flex items-center gap-4 text-sm">
+            <a href="/" target="_blank" rel="noopener" class="text-white/75 hover:text-white">Ver web ↗</a>
+            <form method="post" action="/admin/logout"><button class="font-bold text-[#ffc933] hover:underline">Salir</button></form>
+          </div>
+        </div>
+      </header>
+    )}
+    <main class={bare ? '' : 'mx-auto max-w-6xl px-4 py-8'}>
+      <slot />
+    </main>
+    <script is:inline>
+      document.querySelectorAll('form[data-confirm]').forEach(function (f) {
+        f.addEventListener('submit', function (e) { if (!confirm(f.dataset.confirm)) e.preventDefault(); });
+      });
+    </script>
+  </body>
+</html>

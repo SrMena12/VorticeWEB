@@ -13,7 +13,10 @@
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.4",
+    "@astrojs/vercel": "^11.0.21",
+    "@neondatabase/serverless": "^1.2.0",
     "@tailwindcss/vite": "^4.3.5",
+    "@vercel/blob": "^2.9.0",
     "astro": "^7.4.11",
     "tailwindcss": "^4.3.5"
   }

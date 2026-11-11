@@ -1,0 +1,45 @@
+---
+export const prerender = false;
+import Base from '../../layouts/Base.astro';
+import EventCard from '../../components/EventCard.astro';
+import { listUpcomingEvents } from '../../lib/queries';
+import type { EventRow } from '../../lib/util';
+
+let events: EventRow[] = [];
+let failed = false;
+try {
+  events = await listUpcomingEvents();
+} catch (e) {
+  console.error('eventos', e);
+  failed = true;
+}
+Astro.response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+---
+<Base
+  title="Próximos eventos en Toledo | Inscríbete | Vórtice Eventos"
+  description="Calendario de próximos eventos de Vórtice Eventos en Toledo. Mira las fechas, plazas libres e inscríbete online."
+>
+  <section class="relative overflow-hidden pt-40 pb-12">
+    <div class="aurora" aria-hidden="true"><span class="blob b1"></span><span class="blob b2"></span></div>
+    <div class="relative z-10 mx-auto max-w-6xl px-5">
+      <h1 class="reveal text-[clamp(2.8rem,7vw,6rem)]">Próximos <em>eventos</em></h1>
+      <p class="reveal mt-5 text-xl text-mute max-w-2xl" style="--delay:100ms">Actividades abiertas en Toledo. Elige la tuya, mira las plazas libres e inscríbete en un minuto.</p>
+    </div>
+  </section>
+
+  <section class="mx-auto max-w-6xl px-5 pt-4">
+    {failed ? (
+      <p class="p-6 rounded-3xl bg-white border-2 border-[var(--accl)] font-semibold">Ahora mismo no podemos mostrar el calendario. Inténtalo en unos minutos o <a class="underline text-[color:var(--pt)]" href="/contacto">escríbenos</a>.</p>
+    ) : events.length === 0 ? (
+      <div class="spot p-8 md:p-12 text-center max-w-2xl mx-auto">
+        <h2 class="text-3xl">Aún no hay eventos programados</h2>
+        <p class="mt-3 text-mute">Estamos preparando las próximas fechas. Escríbenos y te avisamos, o cuéntanos qué quieres celebrar.</p>
+        <a class="btn btn-primary mt-6" href="/contacto">Hablar con Vórtice →</a>
+      </div>
+    ) : (
+      <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {events.map((e) => <EventCard e={e} />)}
+      </div>
+    )}
+  </section>
+</Base>

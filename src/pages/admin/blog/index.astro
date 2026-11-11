@@ -1,0 +1,76 @@
+---
+export const prerender = false;
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import { sql } from '../../../lib/db';
+import { listPostsAdmin } from '../../../lib/queries';
+import { fmtDateShort } from '../../../lib/util';
+
+const MSG: Record<string, string> = {
+  creado: 'Artículo creado.', guardado: 'Cambios guardados.', borrado: 'Artículo borrado.',
+  publicado: 'Artículo publicado en la web.', oculto: 'Artículo pasado a borrador.',
+};
+const flash = MSG[Astro.url.searchParams.get('msg') ?? ''] ?? '';
+let posts: Awaited<ReturnType<typeof listPostsAdmin>> = [];
+let error = '';
+
+try {
+  if (Astro.request.method === 'POST') {
+    const form = await Astro.request.formData();
+    const action = String(form.get('action') ?? '');
+    const id = Number(form.get('id'));
+    let msg = '';
+    if (action === 'toggle' && id) {
+      const r = await sql`
+        UPDATE posts SET published = NOT published,
+               published_at = CASE WHEN NOT published AND published_at IS NULL THEN now() ELSE published_at END,
+               updated_at = now()
+         WHERE id = ${id} RETURNING published`;
+      msg = r[0]?.published ? 'publicado' : 'oculto';
+    } else if (action === 'delete' && id) {
+      await sql`DELETE FROM posts WHERE id = ${id}`;
+      msg = 'borrado';
+    }
+    return Astro.redirect(`/admin/blog${msg ? `?msg=${msg}` : ''}`);
+  }
+  posts = await listPostsAdmin();
+} catch (e) {
+  console.error('admin blog', e);
+  error = 'No se pudo leer la base de datos.';
+}
+---
+<AdminLayout title="Blog">
+  <div class="flex flex-wrap items-center gap-3">
+    <h1 class="text-4xl grow">Blog</h1>
+    <a class="btn btn-primary" href="/admin/blog/nuevo">+ Nuevo artículo</a>
+  </div>
+  {flash && <p class="mt-4 p-3 rounded-2xl bg-[#d9f7e3] text-[#0f6b34] font-bold" role="status">{flash}</p>}
+  {error && <p class="mt-4 p-3 rounded-2xl bg-[#ffe3e8] text-[#a3182f] font-bold" role="alert">{error}</p>}
+
+  {posts.length === 0 && !error ? <p class="mt-6 text-mute">Aún no hay artículos.</p> : (
+    <div class="mt-6 grid gap-3">
+      {posts.map((p) => (
+        <article class="glass rounded-3xl p-4 md:p-5 grid gap-3 md:grid-cols-[auto_1fr_auto] md:items-center">
+          <div class="hidden md:block size-20 rounded-2xl overflow-hidden bg-[#e8f4fb] shrink-0">
+            {p.cover_url && <img src={p.cover_url} alt="" class="size-full object-cover" loading="lazy" />}
+          </div>
+          <div>
+            <a href={`/admin/blog/${p.id}`} class="font-display text-2xl hover:underline">{p.title}</a>
+            <p class="text-sm text-mute mt-1">
+              <span class={`font-bold px-3 py-1 rounded-full text-xs ${p.published ? 'bg-[#d9f7e3] text-[#0f6b34]' : 'bg-[#fff1cc] text-[#8a5a00]'}`}>{p.published ? 'Publicado' : 'Borrador'}</span>
+              {p.published_at ? <span class="ml-2">{fmtDateShort(p.published_at)}</span> : null}
+              <span class="ml-2">/blog/{p.slug}</span>
+            </p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <a class="btn btn-white !py-2 !px-4 text-sm border-2 border-[var(--accl)]" href={`/admin/blog/${p.id}`}>Editar</a>
+            <form method="post"><input type="hidden" name="action" value="toggle" /><input type="hidden" name="id" value={p.id} />
+              <button class="btn btn-dark !py-2 !px-4 text-sm">{p.published ? 'Pasar a borrador' : 'Publicar'}</button></form>
+            <form method="post" data-confirm={`¿Borrar el artículo «${p.title}»? No se puede deshacer.`}>
+              <input type="hidden" name="action" value="delete" /><input type="hidden" name="id" value={p.id} />
+              <button class="px-3 py-2 text-sm font-bold text-[#d9304f] hover:underline">Borrar</button></form>
+          </div>
+        </article>
+      ))}
+    </div>
+  )}
+</AdminLayout>

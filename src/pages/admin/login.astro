@@ -1,0 +1,59 @@
+---
+export const prerender = false;
+import AdminLayout from '../../layouts/AdminLayout.astro';
+import { sql, tooMany, clientIp } from '../../lib/db';
+import { verifyPassword, hashPassword, setSessionCookie, readSession, COOKIE } from '../../lib/auth';
+import { clean } from '../../lib/util';
+
+if (readSession(Astro.cookies.get(COOKIE)?.value)) return Astro.redirect('/admin');
+
+let error = '';
+let hasAdmins = true;
+let email = '';
+const DUMMY = hashPassword('no-existe');
+
+try {
+  const [{ n }] = await sql`SELECT count(*)::int AS n FROM admins`;
+  hasAdmins = n > 0;
+
+  if (Astro.request.method === 'POST') {
+    const form = await Astro.request.formData();
+    email = clean(form.get('email'), 200).toLowerCase();
+    const password = String(form.get('password') ?? '');
+
+    if (await tooMany(`login:${clientIp(Astro.request)}`, 8, 15)) {
+      error = 'Demasiados intentos. Espera unos minutos y vuelve a probar.';
+    } else {
+      const rows = await sql`SELECT id, password_hash FROM admins WHERE email = ${email}`;
+      const ok = verifyPassword(password, rows[0]?.password_hash ?? DUMMY) && rows.length > 0;
+      if (ok) {
+        setSessionCookie(Astro.cookies, rows[0].id);
+        return Astro.redirect('/admin');
+      }
+      error = 'Email o contraseña incorrectos.';
+    }
+  }
+} catch (e) {
+  console.error('login', e);
+  error = 'No se puede conectar con la base de datos. Revisa la configuración.';
+}
+---
+<AdminLayout title="Entrar" bare>
+  <div class="min-h-screen grid place-items-center px-4 py-10">
+    <div class="w-full max-w-md">
+      <div class="flex justify-center mb-6"><img src="/img/logo-vortice.png" alt="Vórtice Eventos" width="503" height="260" class="h-20 w-auto" /></div>
+      <form method="post" class="glass rounded-[2rem] p-7 grid gap-4">
+        <h1 class="text-3xl">Panel de administración</h1>
+        <label class="grid gap-1.5 text-sm font-bold">Email
+          <input class="field font-normal" type="email" name="email" value={email} required autocomplete="username" autofocus />
+        </label>
+        <label class="grid gap-1.5 text-sm font-bold">Contraseña
+          <input class="field font-normal" type="password" name="password" required autocomplete="current-password" />
+        </label>
+        {error && <p class="text-[#d9304f] text-sm font-bold" role="alert">{error}</p>}
+        <button class="btn btn-primary w-full" type="submit">Entrar</button>
+        {!hasAdmins && <p class="text-sm text-mute">Aún no hay ninguna cuenta. <a class="font-bold text-[color:var(--pt)] underline" href="/admin/setup">Crear la cuenta de administrador</a></p>}
+      </form>
+    </div>
+  </div>
+</AdminLayout>
