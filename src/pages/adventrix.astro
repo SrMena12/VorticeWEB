@@ -1,4 +1,5 @@
 ---
+import Pic from '../components/Pic.astro';
 import Base from '../layouts/Base.astro';
 import { SITE } from '../data/site';
 
@@ -37,7 +38,7 @@ const schema = [{
   <!-- HERO estilo Adventrix -->
   <section class="pt-24 md:pt-28 px-3 md:px-6">
     <div class="relative mx-auto max-w-[1280px] overflow-hidden rounded-[2rem] min-h-[34rem] md:min-h-[40rem] grid place-items-center text-center">
-      <img src="/img/adv-cumple.webp" alt="Niños en el parque de cuerdas de Adventrix en Toledo" class="absolute inset-0 size-full object-cover" width="1400" height="788" fetchpriority="high" />
+      <Pic src="/img/adv-cumple.webp" alt="Niños en el parque de cuerdas de Adventrix en Toledo" class="absolute inset-0 size-full object-cover" width="1400" height="788" fetchpriority="high" />
       <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/45"></div>
       <div class="relative px-5 py-20">
         <h1 class="text-[clamp(3.5rem,12vw,9rem)] leading-none uppercase" style="color:#0a9ddb;-webkit-text-stroke:3px #fff;paint-order:stroke fill;text-shadow:0 8px 30px rgba(0,0,0,.35)">Adventrix</h1>
@@ -64,7 +65,7 @@ const schema = [{
       </ul>
     </div>
     <div class="md:col-span-2 reveal rounded-[2rem] overflow-hidden border-4 border-[#ffc4d6]" style="--delay:120ms">
-      <img src="/img/adv-hinchables.webp" alt="Hinchables acuáticos y piscina del parque Adventrix" class="w-full aspect-[4/5] object-cover" width="1400" height="1000" loading="lazy" decoding="async" />
+      <Pic src="/img/adv-hinchables.webp" alt="Hinchables acuáticos y piscina del parque Adventrix" class="w-full aspect-[4/5] object-cover" width="1400" height="1000" loading="lazy" decoding="async" />
     </div>
   </section>
 
@@ -101,7 +102,7 @@ const schema = [{
   <!-- Fotos -->
   <section class="mx-auto max-w-6xl px-5 pt-14 grid gap-4 md:grid-cols-3">
     {[['/img/adv-piscina.webp', 'Alojamiento y explanada de Adventrix'], ['/img/adv-aerea.webp', 'Vista aérea de Adventrix con la piscina'], ['/img/adv-albergue.webp', 'Habitación del albergue de Adventrix']].map(([s, a]) => (
-      <img src={s} alt={a} class="reveal w-full aspect-[4/3] object-cover rounded-[1.5rem] border-4 border-[#ffc4d6]" width="1400" height="1050" loading="lazy" decoding="async" />
+      <Pic src={s} alt={a} class="reveal w-full aspect-[4/3] object-cover rounded-[1.5rem] border-4 border-[#ffc4d6]" width="1400" height="1050" loading="lazy" decoding="async" />
     ))}
   </section>
 

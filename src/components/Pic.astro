@@ -1,0 +1,13 @@
+---
+// Imagen responsive: Vercel la redimensiona y la sirve en AVIF/WebP según el navegador.
+// Se aplica a las fotos de /img y a las subidas desde el panel; cualquier otra URL se muestra tal cual.
+import { imgUrl, imgSrcset } from '../lib/util';
+
+interface Props { src: string; alt?: string; sizes?: string; maxw?: number; [key: string]: unknown; }
+const { src, alt = '', sizes = '(min-width: 1024px) 50vw, 100vw', maxw = 1600, ...rest } = Astro.props;
+const clean = String(src).split('?')[0];
+const optimizable = (src.startsWith('/img/') || /^https:\/\/[a-z0-9]+\.public\.blob\.vercel-storage\.com\//.test(src)) && /\.(webp|jpe?g|png)$/i.test(clean);
+---
+{optimizable
+  ? <img src={imgUrl(src, 960)} srcset={imgSrcset(src, maxw)} sizes={sizes} alt={alt} {...rest} />
+  : <img src={src} alt={alt} {...rest} />}

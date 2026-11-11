@@ -123,6 +123,17 @@ export function readingMinutes(content: string): number {
 
 /* ---------- Varios ---------- */
 
+/* ---------- Imágenes optimizadas por Vercel (/_vercel/image) ---------- */
+
+export const IMG_WIDTHS = [320, 480, 640, 960, 1280, 1600];
+export function imgUrl(src: string, w: number): string {
+  if ((import.meta as any).env?.DEV) return src;
+  return `/_vercel/image?url=${encodeURIComponent(src)}&w=${w}&q=75`;
+}
+export function imgSrcset(src: string, max = 1600): string {
+  return IMG_WIDTHS.filter((w) => w <= max).map((w) => `${imgUrl(src, w)} ${w}w`).join(', ');
+}
+
 export function csvCell(v: unknown): string {
   let s = v == null ? '' : String(v);
   // evita que Excel interprete el contenido como fórmula

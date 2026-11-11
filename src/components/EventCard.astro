@@ -1,4 +1,5 @@
 ---
+import Pic from './Pic.astro';
 import { eventState, STATE_LABEL, seatsLeft, fmtDay, fmtMonth, fmtTime, type EventRow } from '../lib/util';
 
 interface Props { e: EventRow; }
@@ -13,7 +14,7 @@ const badge: Record<string, string> = {
 <a href={`/eventos/${e.slug}`} class="spot group flex flex-col h-full">
   <div class="relative overflow-hidden aspect-[16/10] bg-[linear-gradient(135deg,#0a9ddb,#2f8cff)]">
     {e.image_url
-      ? <img src={e.image_url} alt="" width="1400" height="875" loading="lazy" decoding="async" class="size-full object-cover transition-transform duration-700 group-hover:scale-105" />
+      ? <Pic sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw" src={e.image_url} alt="" width="1400" height="875" loading="lazy" decoding="async" class="size-full object-cover transition-transform duration-700 group-hover:scale-105" />
       : <div class="size-full grid place-items-center"><img src="/img/simbolo-vortice-blanco.png" alt="" width="261" height="256" class="h-24 w-auto opacity-90" /></div>}
     <div class="absolute left-4 top-4 rounded-2xl bg-white px-3.5 py-2 text-center leading-none shadow-lg">
       <span class="block font-display text-3xl text-[#0d2f4a]">{fmtDay(e.starts_at)}</span>
